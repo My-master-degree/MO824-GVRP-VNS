@@ -1,0 +1,7 @@
+ qbf020 maxVal = -125.0 Time = 12.808 seg
+ qbf040 maxVal = -366.0 Time = 142.444 seg
+ qbf060 maxVal = -508.0 Time = 594.084 seg
+ qbf080 maxVal = -851.0 Time = 1800.151 seg
+ qbf100 maxVal = -1263.0 Time = 1800.088 seg
+ qbf200 maxVal = -3927.0 Time = 1801.362 seg
+ qbf400 maxVal = -10719.0 Time = 1805.34 seg
