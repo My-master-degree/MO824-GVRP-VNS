@@ -1,4 +1,4 @@
-package problems.qbf.solvers;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -6,7 +6,7 @@ import java.io.IOException;
 import problems.qbf.solvers.*;
 import solutions.Solution;
 
-public class Experimentos {
+public class Main {
 	
 	
 	

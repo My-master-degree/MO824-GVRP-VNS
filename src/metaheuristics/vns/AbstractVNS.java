@@ -80,15 +80,7 @@ public abstract class AbstractVNS<E> {
 	/**
 	 * the time in microseconds the VNS main loop executes.
 	 */
-	protected Double maxDurationInMilliseconds;
-
-	/**
-	 * Creates a new solution which is empty, i.e., does not contain any
-	 * element.
-	 * 
-	 * @return An empty solution.
-	 */
-	public abstract Solution<E> createEmptySol();
+	protected Integer maxDurationInMilliseconds;	
 
 	/**
 	 * Constructor for the AbstractGRASP class.
@@ -101,20 +93,11 @@ public abstract class AbstractVNS<E> {
 	 * @param iterations
 	 *            The number of iterations which the GRASP will be executed.
 	 */
-	public AbstractVNS(Evaluator<E> objFunction, Integer iterations, Double maxDurationInMilliseconds) {
+	public AbstractVNS(Evaluator<E> objFunction, Integer iterations, Integer maxDurationInMilliseconds) {
 		this.ObjFunction = objFunction;
 		this.maxNumberOfIterations = iterations;
 		this.maxDurationInMilliseconds = maxDurationInMilliseconds;
-	}
-
-	/**
-	 * The GRASP constructive heuristic, which is responsible for building a
-	 * feasible solution by selecting in a greedy-random fashion, candidate
-	 * elements to enter the solution.
-	 * 
-	 * @return A feasible solution to the problem being maximized.
-	 */
-	public abstract Solution<E> constructiveHeuristic();
+	}	
 	
 	/**
 	 * The GRASP mainframe. It consists of a loop, in which each iteration goes
@@ -153,5 +136,22 @@ public abstract class AbstractVNS<E> {
 	 * @return An local optimum solution.
 	 */
 	public abstract Solution<E> localSearch(Solution<E> solution);	
+	
+	/**
+	 * The GRASP constructive heuristic, which is responsible for building a
+	 * feasible solution by selecting in a greedy-random fashion, candidate
+	 * elements to enter the solution.
+	 * 
+	 * @return A feasible solution to the problem being maximized.
+	 */
+	public abstract Solution<E> constructiveHeuristic();
+	
+	/**
+	 * Creates a new solution which is empty, i.e., does not contain any
+	 * element.
+	 * 
+	 * @return An empty solution.
+	 */
+	public abstract Solution<E> createEmptySol();
 
 }

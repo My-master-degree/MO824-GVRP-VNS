@@ -33,6 +33,21 @@ public class GVRP implements Evaluator<List<Integer>> {
 	public Integer size;
 
 	/**
+	 * Size of customers list.
+	 */
+	public Integer customersSize;
+	
+	/**
+	 * Size of recharge stations list.
+	 */
+	public Integer rechargeStationsSize;
+	
+	/**
+	 * 
+	 */
+	public Double vehicleCapacity;
+	
+	/**
 	 * The graph vertices, containing customers and fuel stations.
 	 */
 	public Integer[] vertices;
@@ -40,7 +55,7 @@ public class GVRP implements Evaluator<List<Integer>> {
 	/**
 	 * The customers demands.
 	 */
-	public Integer[] customersDemands;
+	public Double[] customersDemands;
 	
 	/**
 	 * The matrix of distance among the graph nodes
@@ -58,8 +73,8 @@ public class GVRP implements Evaluator<List<Integer>> {
 	 */
 	public GVRP(String filename) throws IOException {
 		readInput(filename);
-	}
-
+	}	
+	
 	/*
 	 * (non-Javadoc)
 	 * 
