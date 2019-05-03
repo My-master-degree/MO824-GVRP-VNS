@@ -7,6 +7,7 @@ import java.io.Reader;
 import java.io.StreamTokenizer;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import problems.Evaluator;
 import solutions.Solution;
@@ -48,6 +49,21 @@ public class GVRP implements Evaluator<List<Integer>> {
 	public Double vehicleCapacity;
 	
 	/**
+	 * 
+	 */
+	public Double vehicleAutonomy;
+	
+	/**
+	 * 
+	 */
+	public Double vehicleOperationTime;
+	
+	/**
+	 * 
+	 */
+	public Double vehicleConsumptionRate;
+	
+	/**
 	 * The graph vertices, containing customers and fuel stations.
 	 */
 	public Integer[] vertices;
@@ -55,12 +71,27 @@ public class GVRP implements Evaluator<List<Integer>> {
 	/**
 	 * The customers demands.
 	 */
-	public Double[] customersDemands;
+	public Map<Integer, Double> customersDemands;
+	
+	/**
+	 * The customers demands.
+	 */
+	public Map<Integer, Double> customersServiceTime;
+	
+	/**
+	 * The customers demands.
+	 */
+	public Map<Integer, Double> rechargeStationsRefuelingTime;
 	
 	/**
 	 * The matrix of distance among the graph nodes
 	 */
 	public Double[][] distanceMatrix;
+	
+	/**
+	 * The matrix of time among the graph nodes
+	 */
+	public Double[][] timeMatrix;
 
 	/**
 	 * The constructor for Green-VRP class. The filename of the
@@ -74,6 +105,62 @@ public class GVRP implements Evaluator<List<Integer>> {
 	public GVRP(String filename) throws IOException {
 		readInput(filename);
 	}	
+	
+//	public Double getDistance(int... indexes) {
+//		Double distance = 0d;
+//		for (int k = 0; k < indexes.length - 1; k++) {
+//			distance += this.distanceMatrix[indexes[k]][indexes[k + 1]];
+//		}
+//		return distance;
+//	}
+	
+	public Double getDistance(Integer... indexes) {
+		Double distance = 0d;
+		for (int k = 0; k < indexes.length - 1; k++) {
+			distance += this.distanceMatrix[indexes[k]][indexes[k + 1]];
+		}
+		return distance;
+	}
+	
+	public Double getDistance(List<Integer> indexes) {
+		Double distance = 0d;
+		for (int k = 0; k < indexes.size()- 1; k++) {
+			distance += this.distanceMatrix[indexes.get(k)][indexes.get(k + 1)];
+		}
+		return distance;
+	}
+	
+	public Double getFuelConsumption(int... indexes) {
+		Double consumption = 0d;		
+		for (int k = 0; k < indexes.length - 1; k++) {						
+			consumption += this.distanceMatrix[indexes[k]][indexes[k + 1]] * this.vehicleConsumptionRate;
+			if (this.rechargeStationsRefuelingTime.get(indexes[k + 1]) != null)
+				consumption = consumption - vehicleAutonomy >= 0 ? consumption - vehicleAutonomy : 0;
+		}
+		return consumption;
+	}
+	
+	public Double getTimeConsumption(int... indexes) {
+		Double consumption = 0d;
+		if (indexes.length > 0) {
+			Double customerServiceTime = this.customersServiceTime.get(indexes[0]),
+				rechargeStationRefuelingTime = this.rechargeStationsRefuelingTime.get(indexes[0]);
+			if (customerServiceTime != null)
+				consumption += customerServiceTime;
+			else if (rechargeStationRefuelingTime != null)
+				consumption += rechargeStationRefuelingTime;
+			for (int k = 0; k < indexes.length - 1; k++) {
+				consumption += this.timeMatrix[indexes[k]][indexes[k + 1]];
+				customerServiceTime = this.customersServiceTime.get(indexes[k + 1]);
+				rechargeStationRefuelingTime = this.rechargeStationsRefuelingTime.get(indexes[k + 1]);
+				if (customerServiceTime != null)
+					consumption += customerServiceTime;
+				else if (rechargeStationRefuelingTime != null)
+					consumption += rechargeStationRefuelingTime;
+			}
+		}
+		return consumption;
+	}
 	
 	/*
 	 * (non-Javadoc)
