@@ -140,6 +140,16 @@ public class GVRP implements Evaluator<List<Integer>> {
 		return consumption;
 	}
 	
+	public Double getFuelConsumption(List<Integer> indexes) {
+		Double consumption = 0d;		
+		for (int k = 0; k < indexes.size() - 1; k++) {						
+			consumption += this.distanceMatrix[indexes.get(k)][indexes.get(k + 1)] * this.vehicleConsumptionRate;
+			if (this.rechargeStationsRefuelingTime.get(indexes.get(k + 1)) != null)
+				consumption = consumption - vehicleAutonomy >= 0 ? consumption - vehicleAutonomy : 0;
+		}
+		return consumption;
+	}
+	
 	public Double getTimeConsumption(int... indexes) {
 		Double consumption = 0d;
 		if (indexes.length > 0) {
@@ -160,6 +170,48 @@ public class GVRP implements Evaluator<List<Integer>> {
 			}
 		}
 		return consumption;
+	}
+	
+	public Double getTimeConsumption(List<Integer> indexes) {
+		Double consumption = 0d;
+		if (indexes.size() > 0) {
+			Double customerServiceTime = this.customersServiceTime.get(indexes.get(0)),
+				rechargeStationRefuelingTime = this.rechargeStationsRefuelingTime.get(indexes.get(0));
+			if (customerServiceTime != null)
+				consumption += customerServiceTime;
+			else if (rechargeStationRefuelingTime != null)
+				consumption += rechargeStationRefuelingTime;
+			for (int k = 0; k < indexes.size() - 1; k++) {
+				consumption += this.timeMatrix[indexes.get(k)][indexes.get(k + 1)];
+				customerServiceTime = this.customersServiceTime.get(indexes.get(k + 1));
+				rechargeStationRefuelingTime = this.rechargeStationsRefuelingTime.get(indexes.get(k + 1));
+				if (customerServiceTime != null)
+					consumption += customerServiceTime;
+				else if (rechargeStationRefuelingTime != null)
+					consumption += rechargeStationRefuelingTime;
+			}
+		}
+		return consumption;
+	}
+	
+	public Double getCapacityConsumption(int... indexes) {
+		Double capacity = 0d;
+		for (int i = 0; i < indexes.length; i++) {
+			Double demand = this.customersDemands.get(indexes[i]);
+			if (demand != null)
+				capacity += demand;
+		}
+		return capacity;
+	}
+	
+	public Double getCapacityConsumption(List<Integer> indexes) {
+		Double capacity = 0d;
+		for (int i = 0; i < indexes.size(); i++) {
+			Double demand = this.customersDemands.get(indexes.get(i));
+			if (demand != null)
+				capacity += demand;
+		}
+		return capacity;
 	}
 	
 	/*
