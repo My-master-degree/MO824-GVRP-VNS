@@ -12,8 +12,7 @@ import solutions.Solution;
 public class Main {
 	
 	public static void main(String[] args) throws IOException {
-		
-		InstancesGenerator.generate(20, 5, 100, 30, 20, 60);
+		InstancesGenerator.generate(20, 100, 30, 20, 20);
 	}
 
 }
