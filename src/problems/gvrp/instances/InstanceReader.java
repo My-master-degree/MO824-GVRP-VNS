@@ -5,22 +5,24 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.List;
 
 import problems.gvrp.GVRP;
 
 public class InstanceReader {
 	public static void read(String path, GVRP gvrp) {
-		// We need to provide file path as the parameter: 
-		// double backquote is to avoid compiler interpret words 
-		// like \test as \t (ie. as a escape sequence) 
+		List<Double[]> coordinates = new Double[][];
 		File file = new File(path); 		
 		BufferedReader br;
 		try {
 			br = new BufferedReader(new FileReader(file));
 			String st; 
 			while ((st = br.readLine()) != null) {
-				if (st.substring(0) == "D") {
-					
+				String[] parts = st.split("\t");
+				if (parts[1] == "d") {					
+					for (int i = 0; i < parts.length; i++) {
+						parts[i]
+					}
 				}
 				System.out.println(st); 
 			}
