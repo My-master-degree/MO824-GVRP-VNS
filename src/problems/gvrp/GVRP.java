@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 import problems.Evaluator;
+import problems.gvrp.instances.InstanceReader;
 import solutions.Solution;
 
 /**
@@ -62,11 +63,6 @@ public class GVRP implements Evaluator<List<Integer>> {
 	 * 
 	 */
 	public Double vehicleConsumptionRate;
-	
-	/**
-	 * The graph vertices, containing customers and fuel stations.
-	 */
-	public Integer[] vertices;
 
 	/**
 	 * The customers demands.
@@ -249,25 +245,8 @@ public class GVRP implements Evaluator<List<Integer>> {
 	 * @throws IOException
 	 *             Necessary for I/O operations.
 	 */
-	protected Integer readInput(String filename) throws IOException {
-		Reader fileInst = new BufferedReader(new FileReader(filename));
-		StreamTokenizer stok = new StreamTokenizer(fileInst);
-
-		stok.nextToken();
-		Integer _size = (int) stok.nval;
-		distanceMatrix = new Double[_size][_size];
-
-		for (int i = 0; i < _size; i++) {
-			for (int j = i; j < _size; j++) {
-				stok.nextToken();
-				distanceMatrix[i][j] = stok.nval;
-				//A[j][i] = A[i][j];
-				if (j>i)
-					distanceMatrix[j][i] = 0.0;
-			}
-		}
-
-		return _size;
+	protected void readInput(String filename) throws IOException {
+		InstanceReader.read(filename, this);
 
 	}
 

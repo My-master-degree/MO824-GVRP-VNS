@@ -7,6 +7,7 @@ import java.util.Random;
 
 import metaheuristics.vns.AbstractVNS;
 import problems.gvrp.GVRP_Inverse;
+import problems.gvrp.constructive_heuristic.NearestNeighborhood;
 import solutions.Solution;
 
 
@@ -43,23 +44,15 @@ public class VNS_GVRP extends AbstractVNS<List<Integer>> {
 	@Override
 	public Solution<List<Integer>> localSearch(Solution<List<Integer>> solution) {
 		// TODO Auto-generated method stub
-		return null;
+		return solution;
 	}
 
 
 	@Override
 	public Solution<List<Integer>> constructiveHeuristic() {
 		Solution<List<Integer>> sol = new Solution<List<Integer>>();
-		GVRP_Inverse GVRP_evaluator = (GVRP_Inverse) this.ObjFunction;
-		Double vehicleAvailableCapacity = GVRP_evaluator.vehicleCapacity;
-		List<Integer> currentRoute = new ArrayList<Integer>(); 		
-		Integer insertedCustomers = 0;
-		do {
-			
-			currentRoute.add();
-		}while (insertedCustomers < GVRP_evaluator.customersSize);
-		
-		return null;
+		GVRP_Inverse GVRP_evaluator = (GVRP_Inverse) this.ObjFunction;		
+		return NearestNeighborhood.construct(GVRP_evaluator);
 	}
 
 
