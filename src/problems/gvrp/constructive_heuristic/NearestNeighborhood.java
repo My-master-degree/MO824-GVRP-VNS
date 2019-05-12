@@ -87,7 +87,7 @@ public class NearestNeighborhood {
 	}
 	
 	public static Solution<List<Integer>> construct(GVRP_Inverse gvrp){
-		System.out.println("Building solution");
+//		System.out.println("Building solution");
 //		nearest neighborhood
 //		calculating distances
 		Set<Integer> usedCustomers = new HashSet<Integer> ();
@@ -105,11 +105,11 @@ public class NearestNeighborhood {
 							closestAFS = afs;
 						}
 					}
-					closestAFSbetweenCustomers.put(new CustomerPair(i, j),  closestAFS);
+					closestAFSbetweenCustomers.put(new CustomerPair(i, j),  closestAFS);					
 				}
 			}
 		}
-		System.out.println("Distances calculated");
+//		System.out.println("Distances calculated");
 //		algorithm process
 		Solution<List<Integer>> routes = new Solution<List<Integer>>();		
 		Double availableCapacity = gvrp.vehicleCapacity;
@@ -121,14 +121,16 @@ public class NearestNeighborhood {
 		Integer insertedCustomers = 0;
 		while (insertedCustomers <= gvrp.customersSize) {			
 //			get closest
-			System.out.println("Current node "+currentNode);
+//			System.out.println("Current node "+currentNode);
 			
 			Integer nextCustomer = closestCustomers.get(currentNode);
 			Integer nextRechargeStation = closestAFSbetweenCustomers.get(new CustomerPair(currentNode, nextCustomer));
 			Double nextCustomerDemand = gvrp.customersDemands.get(nextCustomer);
 			if (availableCapacity - nextCustomerDemand >= 0) {
-				System.out.println("Remaining capacity enough");
+//				System.out.println("Remaining capacity enough");
 				Integer closestAFSBetweenNextCustomerAndDepot = closestAFSbetweenCustomers.get(new CustomerPair(currentNode, nextCustomer));
+//				System.out.println(currentNode + " " + nextCustomer);
+//				System.out.println(closestAFSBetweenNextCustomerAndDepot);
 				Double a = gvrp.getDistance(currentNode, nextCustomer, 0),
 					b = gvrp.getDistance(currentNode, nextCustomer, closestAFSBetweenNextCustomerAndDepot, 0),
 					c = gvrp.getDistance(currentNode, nextRechargeStation, nextCustomer, 0),
@@ -138,7 +140,7 @@ public class NearestNeighborhood {
 //				option A
 				if (best.equals(a) && gvrp.getFuelConsumption(currentNode, nextCustomer, 0) <= availableFuel && 
 					gvrp.getTimeConsumption(currentNode, nextCustomer, 0) <= availableTime) {										
-					System.out.println("Option A feasible");
+//					System.out.println("Option A feasible");
 					currentRoute.add(nextCustomer);
 					if (1 <= currentNode && currentNode <= gvrp.customersSize)
 						usedCustomers.add(currentNode);
@@ -153,17 +155,15 @@ public class NearestNeighborhood {
 //				option B
 				best = Math.min(b, Math.min(c, d));
 				if (best.equals(b) && gvrp.getFuelConsumption(currentNode, nextCustomer, closestAFSBetweenNextCustomerAndDepot, 0) <= availableFuel && 
-					gvrp.getTimeConsumption(currentNode, nextCustomer, closestAFSBetweenNextCustomerAndDepot, 0) <= gvrp.vehicleOperationTime){
-					System.out.println("Option B feasible");
+					gvrp.getTimeConsumption(currentNode, nextCustomer, closestAFSBetweenNextCustomerAndDepot, 0) <= availableTime){
+//					System.out.println("Option B feasible");
 					currentRoute.add(nextCustomer);						
-					currentRoute.add(closestAFSBetweenNextCustomerAndDepot);
 					if (1 <= currentNode && currentNode <= gvrp.customersSize)
 						usedCustomers.add(currentNode);
-					availableFuel -= gvrp.getFuelConsumption(currentNode, nextCustomer, closestAFSBetweenNextCustomerAndDepot);
+					availableFuel -= gvrp.getFuelConsumption(currentNode, nextCustomer);
 					availableCapacity -= customerDemand;
-					availableTime -= gvrp.getTimeConsumption(currentNode, nextCustomer, closestAFSBetweenNextCustomerAndDepot);
-					currentNode = closestAFSBetweenNextCustomerAndDepot;					
-					usedCustomers.add(nextCustomer);
+					availableTime -= gvrp.getTimeConsumption(currentNode, nextCustomer);
+					currentNode = nextCustomer;								
 					closestCustomers = calculateClosestDistances(gvrp, usedCustomers);
 					insertedCustomers++;
 					continue;
@@ -171,8 +171,8 @@ public class NearestNeighborhood {
 //				option C
 				best = Math.min(c, d);
 				if (best.equals(c) && gvrp.getFuelConsumption(currentNode, nextRechargeStation, nextCustomer, 0) <= availableFuel && 
-					gvrp.getTimeConsumption(currentNode, nextRechargeStation, nextCustomer, 0) <= gvrp.vehicleOperationTime){
-					System.out.println("Option C feasible");
+					gvrp.getTimeConsumption(currentNode, nextRechargeStation, nextCustomer, 0) <= availableTime){
+//					System.out.println("Option C feasible");
 					currentRoute.add(nextRechargeStation);						
 					currentRoute.add(nextCustomer);			
 					if (1 <= currentNode && currentNode <= gvrp.customersSize)
@@ -180,26 +180,23 @@ public class NearestNeighborhood {
 					availableFuel -= gvrp.getFuelConsumption(currentNode, nextRechargeStation, nextCustomer);
 					availableCapacity -= customerDemand;
 					availableTime -= gvrp.getTimeConsumption(currentNode, nextRechargeStation, nextCustomer);
-					currentNode = nextCustomer;					
-					usedCustomers.add(nextCustomer);
+					currentNode = nextCustomer;		
 					closestCustomers = calculateClosestDistances(gvrp, usedCustomers);
 					insertedCustomers++;
 					continue;
 				}
 //				option D
 				if (gvrp.getFuelConsumption(currentNode, nextRechargeStation, nextCustomer, closestAFSBetweenNextCustomerAndDepot, 0) <= availableFuel && 
-					gvrp.getTimeConsumption(currentNode, nextRechargeStation, nextCustomer, closestAFSBetweenNextCustomerAndDepot, 0) <= gvrp.vehicleOperationTime){
-					System.out.println("Option D feasible");
+					gvrp.getTimeConsumption(currentNode, nextRechargeStation, nextCustomer, closestAFSBetweenNextCustomerAndDepot, 0) <= availableTime){
+//					System.out.println("Option D feasible");
 					currentRoute.add(nextRechargeStation);						
 					currentRoute.add(nextCustomer);
-					currentRoute.add(closestAFSBetweenNextCustomerAndDepot);
 					if (1 <= currentNode && currentNode <= gvrp.customersSize)
 						usedCustomers.add(currentNode);
 					availableFuel -= gvrp.getFuelConsumption(currentNode, nextRechargeStation, nextCustomer);
 					availableCapacity -= customerDemand;
 					availableTime -= gvrp.getTimeConsumption(currentNode, nextRechargeStation, nextCustomer);
-					currentNode = closestAFSBetweenNextCustomerAndDepot;					
-					usedCustomers.add(nextCustomer);
+					currentNode = nextCustomer;				
 					closestCustomers = calculateClosestDistances(gvrp, usedCustomers);
 					insertedCustomers++;
 					continue;
@@ -207,6 +204,7 @@ public class NearestNeighborhood {
 			}
 			availableFuel= gvrp.vehicleAutonomy;
 			availableCapacity = gvrp.vehicleCapacity;
+			availableTime = gvrp.vehicleOperationTime;
 			currentRoute.add(0);
 			routes.add(currentRoute);
 			currentRoute = new ArrayList<Integer>();

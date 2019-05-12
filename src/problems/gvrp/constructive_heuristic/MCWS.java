@@ -22,7 +22,7 @@ public class MCWS {
 	public static final Integer MERGE_LAST_FIRST = 3;
 	public static final Integer MERGE_LAST_LAST = 4;
 	
-	public class Saving {
+	public static class Saving {
 		Integer node1;
 		Integer node2;
 		List<Integer> route1;
@@ -40,9 +40,9 @@ public class MCWS {
 		}
 	}
 	
-	public Solution<List<Integer>> construct(GVRP_Inverse gvrp){
-		List<List<Integer>> feasibleRoutes = new ArrayList<List<Integer>>(),
-				infeasibleRoutes = new ArrayList<List<Integer>>();
+	public static Solution<List<Integer>> construct(GVRP_Inverse gvrp){
+		Solution<List<Integer>> feasibleRoutes = new Solution<List<Integer>>(),
+				infeasibleRoutes = new Solution<List<Integer>>();
 //		build feasible and infeasible routes
 		for (int i = 1; i <= gvrp.customersSize; i++) {
 			List<Integer> route = new ArrayList<Integer> ();
@@ -103,7 +103,7 @@ public class MCWS {
 			feasibleRoutes.add(infeasibleRoute);
 		}
 //		compute savings
-		List<Saving> savingsPairList = this.computeSavings(feasibleRoutes, gvrp);
+		List<Saving> savingsPairList = computeSavings(feasibleRoutes, gvrp);
 //      merge routes
         while(savingsPairList.size() > 0) {
         	Saving saving = savingsPairList.remove(0);
@@ -172,13 +172,13 @@ public class MCWS {
         	feasibleRoutes.remove(saving.route1);
         	feasibleRoutes.remove(saving.route2);
         	feasibleRoutes.add(newRoute);
-        	savingsPairList = this.computeSavings(feasibleRoutes, gvrp);
+        	savingsPairList = computeSavings(feasibleRoutes, gvrp);
         }
         
-		return null;
+		return feasibleRoutes;
 	}
 	
-	public List<Saving> computeSavings(List<List<Integer>> feasibleRoutes, GVRP_Inverse gvrp){
+	public static List<Saving> computeSavings(List<List<Integer>> feasibleRoutes, GVRP_Inverse gvrp){
 //		calculate merge cost
 		List<Saving> savingsPairList = new ArrayList<Saving>(feasibleRoutes.size() * feasibleRoutes.size() * 4);
 		for (int i = 0; i < feasibleRoutes.size(); i++) {

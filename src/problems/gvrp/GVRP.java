@@ -111,7 +111,7 @@ public class GVRP implements Evaluator<List<Integer>> {
 //	}
 	
 	public Double getDistance(Integer... indexes) {
-		Double distance = 0d;
+		Double distance = 0d;		
 		for (int k = 0; k < indexes.length - 1; k++) {
 			distance += this.distanceMatrix[indexes[k]][indexes[k + 1]];
 		}
