@@ -48,7 +48,7 @@ public class InstanceReader {
 //			calculate distances and times			
 			List<Double[]> allNodes = new ArrayList<Double[]> (gvrp.customersSize + gvrp.rechargeStationsSize + 1);
 			allNodes.add(depotCoordinates);
-			allNodes.addAll(1, customersCoordinates);
+			allNodes.addAll(customersCoordinates);
 			allNodes.addAll(afssCoordinates);
 			gvrp.distanceMatrix = new Double[allNodes.size()][allNodes.size()];
 			gvrp.timeMatrix = new Double[allNodes.size()][allNodes.size()];
@@ -62,7 +62,7 @@ public class InstanceReader {
 				for (int j = i + 1; j < allNodes.size(); j++) {		
 					Double[] nodeJ = allNodes.get(j);
 					Double lon2 = nodeJ[0], 
-							lat2 = nodeI[1];						 
+							lat2 = nodeJ[1];						 
 					// miles, 6371km; 
 					double dLat = Math.toRadians(lat2-lat1); 
 					double dLon = Math.toRadians(lon2-lon1); 

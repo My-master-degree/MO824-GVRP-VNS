@@ -62,7 +62,7 @@ public class MCWS {
 			Integer bestStationBefore = null, 
 					bestStationAfter = null;
 			Double bestStationSaving = Double.MAX_VALUE;
-			for (int f = gvrp.customersSize + 1; f < gvrp.size; f++) {
+			for (Integer f: gvrp.rechargeStationsRefuelingTime.keySet()) {
 //				check insert before
 				if (gvrp.getFuelConsumption(0, f, customer, 0) <= gvrp.vehicleAutonomy &&
 					gvrp.getTimeConsumption(0, f, customer, 0) <= gvrp.vehicleOperationTime) {
@@ -83,7 +83,7 @@ public class MCWS {
 					}
 				}
 //				check insert before and after at same time
-				for (int _f = gvrp.customersSize + 1; _f < gvrp.size; _f++) {					
+				for (Integer _f: gvrp.rechargeStationsRefuelingTime.keySet()) {					
 					if (gvrp.getFuelConsumption(0, f, customer, _f, 0) <= gvrp.vehicleAutonomy &&
 						gvrp.getTimeConsumption(0, f, customer, _f, 0) <= gvrp.vehicleOperationTime) {
 						Double saving = gvrp.getDistance(0, f, customer, _f, 0) - gvrp.getDistance(0, customer, 0);
@@ -100,7 +100,10 @@ public class MCWS {
 				infeasibleRoute.add(1, bestStationBefore);
 			if (bestStationAfter != null) 
 				infeasibleRoute.add(infeasibleRoute.size() - 1, bestStationAfter);
-			feasibleRoutes.add(infeasibleRoute);
+			if (gvrp.getFuelConsumption(infeasibleRoute) <= gvrp.vehicleAutonomy &&
+				gvrp.getTimeConsumption(infeasibleRoute) <= gvrp.vehicleOperationTime) {
+				feasibleRoutes.add(infeasibleRoute);
+			}			
 		}
 //		compute savings
 		List<Saving> savingsPairList = computeSavings(feasibleRoutes, gvrp);

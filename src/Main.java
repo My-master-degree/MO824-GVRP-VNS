@@ -3,6 +3,7 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -10,6 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import metaheuristics.vns.AbstractVNS.NeighborhoodStructure;
 import problems.gvrp.GVRP_Inverse;
@@ -65,18 +67,7 @@ public class Main {
 //	}
 	
 	public static void main(String[] args) throws IOException {
-		String[] instances = new String[] {
-			"Large_VA_Input_111c_21s.txt",
-			"Large_VA_Input_111c_22s.txt",
-			"Large_VA_Input_111c_24s.txt",
-			"Large_VA_Input_111c_26s.txt",
-			"Large_VA_Input_111c_28s.txt",
-			"Large_VA_Input_200c_21s.txt",
-			"Large_VA_Input_300c_21s.txt",
-			"Large_VA_Input_350c_21s.txt",
-			"Large_VA_Input_400c_21s.txt",
-			"Large_VA_Input_450c_21s.txt",
-			"Large_VA_Input_500c_21s.txt",
+		String[] s1instances =  new String[] {			
 			"S1_20c3sU10.txt",
 			"S1_20c3sU1.txt",
 			"S1_20c3sU2.txt",
@@ -87,6 +78,8 @@ public class Main {
 			"S1_20c3sU7.txt",
 			"S1_20c3sU8.txt",
 			"S1_20c3sU9.txt",
+		},
+		s2instances =  new String[] {			
 			"S2_20c3sC10.txt",
 			"S2_20c3sC1.txt",
 			"S2_20c3sC2.txt",
@@ -97,6 +90,8 @@ public class Main {
 			"S2_20c3sC7.txt",
 			"S2_20c3sC8.txt",
 			"S2_20c3sC9.txt",
+		},
+		s3instances =  new String[] {			
 			"S3_S1_10i6s.txt",
 			"S3_S1_2i6s.txt",
 			"S3_S1_4i6s.txt",
@@ -107,6 +102,8 @@ public class Main {
 			"S3_S2_4i6s.txt",
 			"S3_S2_6i6s.txt",
 			"S3_S2_8i6s.txt",
+		},
+		s4instances =  new String[] {			
 			"S4_S1_4i10s.txt",
 			"S4_S1_4i2s.txt",
 			"S4_S1_4i4s.txt",
@@ -117,14 +114,42 @@ public class Main {
 			"S4_S2_4i4s.txt",
 			"S4_S2_4i6s.txt",
 			"S4_S2_4i8s.txt",
+		},
+		largeInstances =  new String[] {			
+			"Large_VA_Input_111c_21s.txt",
+			"Large_VA_Input_111c_22s.txt",
+			"Large_VA_Input_111c_24s.txt",
+			"Large_VA_Input_111c_26s.txt",
+			"Large_VA_Input_111c_28s.txt",
+			"Large_VA_Input_200c_21s.txt",
+			"Large_VA_Input_300c_21s.txt",
+			"Large_VA_Input_350c_21s.txt",
+			"Large_VA_Input_400c_21s.txt",
+			"Large_VA_Input_450c_21s.txt",
+			"Large_VA_Input_500c_21s.txt",	
 		};
-		for (int i = 0; i < instances.length; i++) {
+//		all instances
+		Stream<String> stream = Stream.of();
+		for (String[] s: new String[][] {s1instances, s2instances, s3instances, s4instances, largeInstances, })
+			stream = Stream.concat(stream, Arrays.stream(s));
+		String[] instances = stream.toArray(String[]::new);
+//	
+//		for (int i = 0; i < instances.length; i++) {
+		for (int i = 0; i < s1instances.length; i++) {
+//		for (int i = 0; i < s2instances.length; i++) {
+//		for (int i = 0; i < s3instances.length; i++) {
+//		for (int i = 0; i < s4instances.length; i++) {
+//		for (int i = 0; i < largeInstances.length; i++) {
 			System.out.println(instances[i]);
 			GVRP_Inverse gvrp = new GVRP_Inverse("instances/"+instances[i]);
 			
-			Solution<List<Integer>> sol = NearestNeighborhood.construct(gvrp);		
-			Analyzer.analyze(sol, gvrp);
-			break;
+			Solution<List<Integer>> sol = MCWS.construct(gvrp);
+			double c = 0;
+			for (int j = 0; j < sol.size(); j++) {
+				c += gvrp.getDistance(sol.get(j));
+			}
+			System.out.println("\tcost:"+c);
+			Analyzer.analyze(sol, gvrp);			
 		}		
 	}
 	
