@@ -122,9 +122,14 @@ public class Main {
 			System.out.println(instances[i]);
 			GVRP_Inverse gvrp = new GVRP_Inverse("instances/"+instances[i]);
 			
-			Solution<List<Integer>> sol = NearestNeighborhood.construct(gvrp);		
+			Solution<List<Integer>> sol = MCWS.construct(gvrp);
+			double c = 0;
+			for (int j = 0; j < sol.size(); j++) {
+				c += gvrp.getDistance(sol.get(j));
+			}		
+			System.out.println(c);
 			Analyzer.analyze(sol, gvrp);
-			break;
+//			break;
 		}		
 	}
 	
