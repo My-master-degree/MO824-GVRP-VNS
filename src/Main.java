@@ -11,6 +11,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import metaheuristics.vns.AbstractVNS.NeighborhoodStructure;
@@ -135,22 +137,23 @@ public class Main {
 		String[] instances = stream.toArray(String[]::new);
 //	
 //		for (int i = 0; i < instances.length; i++) {
-		for (int i = 0; i < s1instances.length; i++) {
-//		for (int i = 0; i < s2instances.length; i++) {
-//		for (int i = 0; i < s3instances.length; i++) {
-//		for (int i = 0; i < s4instances.length; i++) {
-//		for (int i = 0; i < largeInstances.length; i++) {
-			System.out.println(instances[i]);
-			GVRP_Inverse gvrp = new GVRP_Inverse("instances/"+instances[i]);
-			
-			Solution<List<Integer>> sol = MCWS.construct(gvrp);
-			double c = 0;
-			for (int j = 0; j < sol.size(); j++) {
-				c += gvrp.getDistance(sol.get(j));
-			}
-			System.out.println("\tcost:"+c);
-			Analyzer.analyze(sol, gvrp);			
-		}		
+//		for (int i = 0; i < s1instances.length; i++) {
+////		for (int i = 0; i < s2instances.length; i++) {
+////		for (int i = 0; i < s3instances.length; i++) {
+////		for (int i = 0; i < s4instances.length; i++) {
+////		for (int i = 0; i < largeInstances.length; i++) {
+//			System.out.println(instances[i]);
+//			GVRP_Inverse gvrp = new GVRP_Inverse("instances/"+instances[i]);
+//			
+//			Solution<List<Integer>> sol = MCWS.construct(gvrp);
+//			double c = 0;
+//			for (int j = 0; j < sol.size(); j++) {
+//				c += gvrp.getDistance(sol.get(j));
+//			}
+//			System.out.println("\tcost:"+c);
+//			Analyzer.analyze(sol, gvrp);			
+//		}		
+		InstancesGenerator.generate("CVRP Instances/A-n32-k5.vrp", 30, 100);
 	}
 	
 }

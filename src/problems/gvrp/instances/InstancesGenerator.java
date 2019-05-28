@@ -1,20 +1,33 @@
 package problems.gvrp.instances;
 
 import gurobi.*;
-
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class InstancesGenerator {
 	public static class Node{
 		public int x;
 		public int y;
 		public double demand;
+		public List<Node> neighborhoods;
 		
 		Node (int x, int y){
 			this.x = x;
 			this.y = y;
+			this.neighborhoods = new ArrayList<Node> ();
 		}
 		
 		@Override
@@ -47,144 +60,150 @@ public class InstancesGenerator {
 		return Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2));
 	}
 	
-	public static Map<Node, Integer> generate(int customersNumber, int afssNumber, int planeDimension, double vehicleAutonomy, double vehicleCapacity) {
+	public static void generate(String fileName, int afssNumber, double vehicleAutonomy) {
+		Map<Integer, Node> customerAndDepotDemands = new HashMap<Integer, InstancesGenerator.Node>();
+		File file = new File(fileName); 		
+		BufferedReader br;
+		try {
+			br = new BufferedReader(new FileReader(file));			
+//			discard three first lines
+			br.readLine();
+			br.readLine();
+			br.readLine();
+//			get number of nodes
+			Pattern p = Pattern.compile("(\\d+)");
+			Matcher m = p.matcher(br.readLine()); 
+			m.find();
+			Integer numOfNodes = Integer.valueOf(m.group(0)); 
+//			discard next line
+			br.readLine();
+//			get capacity
+			m = p.matcher(br.readLine()); 
+			m.find();
+			Integer vehicleCapacity = Integer.valueOf(m.group(0));
+//			discard next line
+			br.readLine();
+//			get nodes
+			String st;
+			while(true) {				
+				st = br.readLine();
+				m = p.matcher(st); 
+				if (!m.find()) 
+					break;	
+				Integer id = Integer.valueOf(m.group());
+				m.find();
+				Integer x = Integer.valueOf(m.group());
+				m.find();
+				Integer y = Integer.valueOf(m.group());								
+				customerAndDepotDemands.put(id, new Node(x, y));
+			}
+//			get demands
+			while(true) {
+				st = br.readLine();
+				m = p.matcher(st);
+				if (!m.find())
+					break;
+				Integer id = Integer.valueOf(m.group());
+				m.find();									
+				customerAndDepotDemands.get(id).demand = Double.valueOf(m.group());
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 				
+//		get graph dimension
+		Integer maxX = Integer.MIN_VALUE,
+				maxY = Integer.MIN_VALUE;
+		for (Node node : customerAndDepotDemands.values()) {
+			if (node.x > maxX)
+				maxX = node.x;
+			if (node.y > maxY)
+				maxY = node.y;
+		}
+//		generate random afss
 		Random random = new Random();	
 		random.setSeed(System.currentTimeMillis());
-		Map<Node, Integer> nodes = new HashMap<Node, Integer>(customersNumber + 1);
-		Double[] demandInterval = new Double[] {vehicleCapacity/10, vehicleCapacity*0.75};
-//		depot		
-		Node depot = new Node (random.nextInt(planeDimension), random.nextInt(planeDimension));		
-		nodes.put(depot, 0);
-		System.out.println("Depot generated at "+depot.x+" "+depot.y);		
-		for (int i = 1; i <= customersNumber; i++) {
-			System.out.println("Generating customer "+ i);
-			Node customer;			
-			int limit = (int) (vehicleAutonomy * 1.5);
-			do {				
-//				X
-				int r = random.nextInt(2);
-				int x = depot.x;
-				if (r == 1) 
-					x -= random.nextInt(Math.min(limit, depot.x) + 1);
-				else
-					x += random.nextInt(Math.min(planeDimension - depot.x, limit) + 1);
-//				Y
-				r = random.nextInt(2);
-				int y = depot.y;
-				if (r == 1) 
-					y -= random.nextInt(Math.min(limit, depot.y) + 1);
-				else
-					y += random.nextInt(Math.min(planeDimension - depot.y, limit) + 1);
-				customer = new Node (x, y);				
-				System.out.println("\tTrying generate customer "+ i);
-			}while(nodes.get(customer) != null);
-			System.out.println("\tCustomer "+ i+" generated at "+customer.x+" "+customer.y);
-//			define demand
-			customer.demand = demandInterval[0] + random.nextDouble() * demandInterval[1]; 
-			nodes.put(customer, i);			
-		}
-//		generate random points to be possibly AFS's
-		boolean allCustomersServed;
-		Map<Node, Map<Node, Boolean>> possibleAFSs = new HashMap<Node, Map<Node, Boolean>> (afssNumber);
-		do {
-			allCustomersServed = true;			
-			int limit = (int) Math.floor(vehicleAutonomy);			
+		Set<Node> afss;
+		while(true) {
+			afss = new HashSet<Node> (afssNumber);
+			afss.add(customerAndDepotDemands.get(1));
+//			generate afss
+			System.out.println("\tGenerating AFSs");
 			for (int i = 0; i < afssNumber; i++) {
-				Node possibleAFS;
-				System.out.println("Trying to generate a new AFS");
-				do {
-					possibleAFS = new Node (
-						depot.x + (random.nextInt(2) == 1 ? - random.nextInt(Math.min(limit, depot.x) + 1) : 
-							random.nextInt(Math.min(planeDimension - depot.x, limit) + 1)), 
-						depot.y + (random.nextInt(2) == 1 ? - random.nextInt(Math.min(limit, depot.y) + 1) :
-							random.nextInt(Math.min(planeDimension - depot.y, limit) + 1)));						
-					System.out.print(".");
-				}while(possibleAFSs.get(possibleAFS) != null || nodes.get(possibleAFS) != null);
-				System.out.println("\nPossible AFS at "+possibleAFS.x+" "+possibleAFS.y);
-	//			get customers in possible AFS cover
-				Map<Node, Boolean> customersInAFSCover = new HashMap<Node, Boolean>();
-				System.out.println("Its covering");
-				for (Node node:nodes.keySet()) {				
-					if (nodes.get(node) != 0 && getDistance(node, possibleAFS) <= (limit / 2)) { 
-						customersInAFSCover.put(node, true);
-						System.out.print(nodes.get(node) + " ");
-					}				
-				}
-				System.out.println();
-				possibleAFSs.put(possibleAFS, customersInAFSCover);										
-			}	
-	//		check
-			System.out.println("Check");
-			for (Node customer : nodes.keySet()) {
-				boolean find = false;
-				if (nodes.get(customer) != 0) {
-					for (Node possibleAFS : possibleAFSs.keySet()) {
-						if (possibleAFSs.get(possibleAFS).get(customer) != null) {
-							find = true;
-							break;
-						}
-					}
-					if (!find) {
-						System.out.println("Customer "+ nodes.get(customer)+" not served");
-						allCustomersServed = false;
-						break;						
-					}
-				}			
+				Node afs = new Node (random.nextInt(maxX + 1), random.nextInt(maxY + 1));
+				if (!afss.contains(afs)) 
+					afss.add(afs);
+				else
+					i--;
 			}
-		}while(!allCustomersServed);
-//		run cover set
-		int afssUsed = 0;
-		System.out.println("SET COVER MIP");
-		try {
-			GRBEnv    env   = new GRBEnv("setCover.log");
-			GRBModel  model = new GRBModel(env);		
-			// Create variables
-			GRBVar[] y = new GRBVar[possibleAFSs.size()];		  
-			for (int i = 0; i < possibleAFSs.size(); i++) 
-				y[i] = model.addVar(0.0, 1.0, 0.0, GRB.BINARY, "x_"+i);			  			
-			// Set objective: min \sum_{i \in AFSs candidates set} y_{i}
-			GRBLinExpr expr = new GRBLinExpr();
-			for (int i = 0; i < y.length; i++) 
-				expr.addTerm(1.0, y[i]);					 
-			model.setObjective(expr, GRB.MINIMIZE);		
-			// Add constraint: \sum_{i \in covering of possible AFS j} >= 1 \forall_{j \in set of customers}
-			for (Node customer:nodes.keySet()) 
-				if (nodes.get(customer) != 0) {
-					expr = new GRBLinExpr();
-					int i = 0;
-					for (Node possibleAFS:possibleAFSs.keySet()) 
-						if (possibleAFSs.get(possibleAFS).get(customer) != null) {
-							expr.addTerm(1.0, y[i]);
-							i++;
-						}							 
-					model.addConstr(expr, GRB.GREATER_EQUAL, 1.0, "c_customer_"+nodes.get(customer));
-				}			  				  	
-			// Optimize model
-			model.optimize();
-			int i = 0;
-			for (Node possibleAFS : possibleAFSs.keySet()) {
-				if (y[i].get(GRB.DoubleAttr.X) == 1.0) { 
-					nodes.put(possibleAFS, nodes.size() + 1);
-					afssUsed++;
+			System.out.println("\tAFSs generated");
+//			check if each customers have at least one afs at a maximum of distance of \beta/2
+			System.out.println("\tChecking if each customers have at least one afs at a maximum of distance of \\beta/2");
+			boolean infeasibleInstance = false;
+			for (Node b : customerAndDepotDemands.values()) {
+				boolean afsCloserEnough = false;
+				for (Node e : afss) {
+					if (getDistance(b, e) <= vehicleAutonomy/2) {
+						afsCloserEnough = true;
+						break;
+					}
 				}
-				i++;				
-			}			  		
-			System.out.println("Number of AFSs choosed: " + model.get(GRB.DoubleAttr.ObjVal));		
-			// Dispose of model and environment		
-			model.dispose();
-			env.dispose();		
-		} catch (GRBException e) {
-			System.out.println("Error code: " + e.getErrorCode() + ". " + e.getMessage());
-		}		
-//		creating remaining AFSs
-		for (int i = afssUsed; i <= afssNumber; i++) {
-			Node afs;
-			do {
-				afs = new Node (random.nextInt(planeDimension), random.nextInt(planeDimension));						
-			}while(nodes.get(afs) != null);
-			nodes.put(afs, nodes.size() + 1);
+				if (!afsCloserEnough) {
+					infeasibleInstance = true;
+					break;
+				}
+			}			
+			if (!infeasibleInstance) {
+				System.out.println("\tCustomers not at good distance");
+				continue;
+			}
+			System.out.println("\tCustomers at good distance");
+//			generate tree
+			System.out.println("\tChecking if each afs have at least one afs at a maximum of distance of \\beta");
+			for (Node b : afss) {
+				boolean afsCloserEnough = false;
+				for (Node e : afss) {					
+					if (!b.equals(e) && getDistance(b, e) <= vehicleAutonomy) {
+						b.neighborhoods.add(e);
+						e.neighborhoods.add(b);
+						afsCloserEnough = true;
+					}
+				}
+				if (!afsCloserEnough) {
+					infeasibleInstance = true;
+					break;
+				}
+			}	
+			if (!infeasibleInstance) {
+				System.out.println("\tAFSs not at good distance");
+				continue;
+			}
+			System.out.println("\tAFSs at good distance");
+//			check if is connected
+			if (!Util.isAConnectedGraph(afss)) {
+				System.out.println("\tNot a valid tree");
+				continue;
+			}
+			System.out.println("\tValid tree");
+			break;
 		}
-//		return
-		return nodes;
+		System.out.println("AFSS generated");
+//		write file		
+		try {
+			BufferedWriter writer = new BufferedWriter(new FileWriter(fileName + ".gvrp"));
+			String str = "NAME: A-n" + customerAndDepotDemands.size() + "-f"+afss.size()+"\n"
+					+ "COMMENT : -\n"
+					+ "TYPE : GVRP\n"
+					+ "DIMENSION : "+ customerAndDepotDemands.size();
+			
+			
+			writer.write(str);		     
+		    writer.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}	    
+		
+		
 	}
 }
