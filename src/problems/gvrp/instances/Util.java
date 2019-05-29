@@ -2,11 +2,13 @@ package problems.gvrp.instances;
 import java.util.HashSet;
 import java.util.Set;
 
+import problems.gvrp.instances.NodeData;
+
 public class Util {
-	public static boolean isAConnectedGraph(Set<InstancesGenerator.Node> nodes) {
-		Set<InstancesGenerator.Node> visitedNodes = new HashSet<InstancesGenerator.Node> (nodes.size());
+	public static boolean isAConnectedGraph(Set<NodeData> nodes) {
+		Set<NodeData> visitedNodes = new HashSet<NodeData> (nodes.size());
 		dfs(nodes.iterator().next(), visitedNodes);
-		for (InstancesGenerator.Node node : nodes) {
+		for (NodeData node : nodes) {
 			if (!visitedNodes.contains(node)) {
 				return false;
 			}
@@ -15,12 +17,16 @@ public class Util {
 //		return visitedNodes.size() == nodes.size();
 	}
 	
-	public static void dfs(InstancesGenerator.Node currentNode, Set<InstancesGenerator.Node> visitedNodes) {
+	public static void dfs(NodeData currentNode, Set<NodeData> visitedNodes) {
 		if (!visitedNodes.contains(currentNode)) {
 			visitedNodes.add(currentNode);
-			for (InstancesGenerator.Node node : currentNode.neighborhoods) {
+			for (NodeData node : currentNode.neighborhoods) {
 				dfs(node, visitedNodes);
 			}
 		}
+	}
+
+	static double get2DEuclidianDistance(NodeData a, NodeData b) {		
+		return Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2));
 	}
 }

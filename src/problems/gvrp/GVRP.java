@@ -10,7 +10,8 @@ import java.util.List;
 import java.util.Map;
 
 import problems.Evaluator;
-import problems.gvrp.instances.InstanceReader;
+import problems.gvrp.instances.EMHInstanceReader;
+import problems.gvrp.instances.MyInstanceReader;
 import solutions.Solution;
 
 /**
@@ -246,7 +247,7 @@ public class GVRP implements Evaluator<List<Integer>> {
 	 *             Necessary for I/O operations.
 	 */
 	protected void readInput(String filename) throws IOException {
-		InstanceReader.read(filename, this);
+		MyInstanceReader.read(filename, this);
 
 	}
 

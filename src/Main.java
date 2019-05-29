@@ -135,14 +135,10 @@ public class Main {
 		for (String[] s: new String[][] {s1instances, s2instances, s3instances, s4instances, largeInstances, })
 			stream = Stream.concat(stream, Arrays.stream(s));
 		String[] instances = stream.toArray(String[]::new);
+		
 //		String[] instances = s3instances;
 		
 //		for (int i = 0; i < instances.length; i++) {
-//		for (int i = 0; i < s1instances.length; i++) {
-//		for (int i = 0; i < s2instances.length; i++) {
-//		for (int i = 0; i < s3instances.length; i++) {
-//		for (int i = 0; i < s4instances.length; i++) {
-//		for (int i = 0; i < largeInstances.length; i++) {
 //			System.out.print(instances[i]+": ");
 //			GVRP_Inverse gvrp = new GVRP_Inverse("instances/"+instances[i]);
 			
@@ -181,6 +177,8 @@ public class Main {
 			"A-n69-k9.vrp",
 			"A-n80-k10.vrp",
 		};
+		
+		
 		for (String cvrpInstance: cvrpInstances) {
 			System.out.println(cvrpInstance);
 			Pattern p = Pattern.compile("(\\d+)");
@@ -190,6 +188,41 @@ public class Main {
 			InstancesGenerator.generate("CVRP Instances/"+cvrpInstance, Integer.valueOf(m.group()));
 //			break;
 		}		
+		
+		String[] gvrpInstances = new String[] {
+			"A-n54-k7.vrp.gvrp",
+			"A-n60-k9.vrp.gvrp",
+			"A-n65-k9.vrp.gvrp",
+			"A-n33-k5.vrp.gvrp",
+			"A-n62-k8.vrp.gvrp",
+			"A-n39-k6.vrp.gvrp",
+			"A-n38-k5.vrp.gvrp",
+			"A-n36-k5.vrp.gvrp",
+			"A-n39-k5.vrp.gvrp",
+			"A-n32-k5.vrp.gvrp",
+			"A-n37-k5.vrp.gvrp",
+			"A-n69-k9.vrp.gvrp",
+			"A-n61-k9.vrp.gvrp",
+			"A-n48-k7.vrp.gvrp",
+			"A-n45-k7.vrp.gvrp",
+			"A-n45-k6.vrp.gvrp",
+			"A-n55-k9.vrp.gvrp",
+			"A-n53-k7.vrp.gvrp",
+			"A-n34-k5.vrp.gvrp",
+			"A-n64-k9.vrp.gvrp",
+			"A-n80-k10.vrp.gvrp",
+			"A-n63-k9.vrp.gvrp",
+			"A-n46-k7.vrp.gvrp",
+			"A-n63-k10.vrp.gvrp",
+			"A-n37-k6.vrp.gvrp",
+			"A-n44-k7.vrp.gvrp",
+			"A-n33-k6.vrp.gvrp",
+		};
+		for (int i = 0; i < gvrpInstances.length; i++) {	
+			GVRP_Inverse gvrp = new GVRP_Inverse("CVRP Instances/"+gvrpInstances[i]);
+			System.out.println(gvrp.toString());
+			break;
+		}
 	}
 	
 }

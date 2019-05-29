@@ -11,7 +11,7 @@ import java.util.List;
 
 import problems.gvrp.GVRP;
 
-public class InstanceReader {
+public class EMHInstanceReader {
 	public static void read(String path, GVRP gvrp) {
 		List<Double[]> customersCoordinates = new ArrayList<Double[]>(),
 				afssCoordinates = new ArrayList<Double[]>();
@@ -58,7 +58,7 @@ public class InstanceReader {
 				gvrp.timeMatrix[i][i] = 0d;
 				Double[] nodeI = allNodes.get(i);
 				Double lon1 = nodeI[0], 
-					lat1 = nodeI[1]; 
+						lat1 = nodeI[1]; 
 				for (int j = i + 1; j < allNodes.size(); j++) {		
 					Double[] nodeJ = allNodes.get(j);
 					Double lon2 = nodeJ[0], 
@@ -84,7 +84,6 @@ public class InstanceReader {
 			for (int i = 1; i <= gvrp.customersSize; gvrp.customersDemands.put(i, 0d), gvrp.customersServiceTime.put(i, 0.25d), i++);			
 			gvrp.rechargeStationsRefuelingTime = new HashMap<Integer, Double> ();
 			for (int i = 1; i <= gvrp.rechargeStationsSize; gvrp.rechargeStationsRefuelingTime.put(gvrp.customersSize + i, 0.5d), i++);
-			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

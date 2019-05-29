@@ -1,7 +1,5 @@
 package problems.gvrp.instances;
 
-import gurobi.*;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -20,65 +18,28 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class InstancesGenerator {
-	public static class Node{
-		public int x;
-		public int y;
-		public double demand;
-		public List<Node> neighborhoods;
-		
-		Node (int x, int y){
-			this.x = x;
-			this.y = y;
-			this.neighborhoods = new ArrayList<Node> ();
-		}
-		
-		@Override
-		public int hashCode() {
-			final int prime = 31;
-			int result = 1;
-			result = prime * result + x;
-			result = prime * result + y;
-			return result;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (this == obj)
-				return true;
-			if (obj == null)
-				return false;
-			if (getClass() != obj.getClass())
-				return false;
-			Node other = (Node) obj;
-			if (x != other.x)
-				return false;
-			if (y != other.y)
-				return false;
-			return true;
-		}
-	}
-	
-	private static double getDistance(Node a, Node b) {		
-		return Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2));
-	}
-	
 	
 	public static void generate(String fileName, int afssNumber) {
-		Map<Integer, Node> customers = new HashMap<Integer, InstancesGenerator.Node>();
-		Node depot = null;
+		Map<Integer, NodeData> customers = new HashMap<Integer, NodeData>();
+		NodeData depot = null;
 		File file = new File(fileName); 		
 		BufferedReader br;
 		Integer vehicleCapacity = null;
 		Integer vehicleAutonomy = null;
+		Integer opt = null;
 		try {
 			br = new BufferedReader(new FileReader(file));			
-//			discard three first lines
+//			discard first line
 			br.readLine();
-			br.readLine();
-			br.readLine();
-//			get number of nodes
+//			get optimal cost
 			Pattern p = Pattern.compile("(\\d+)");
-			Matcher m = p.matcher(br.readLine()); 
+			Matcher m = p.matcher(br.readLine());			
+			while(m.find())
+				opt = Integer.valueOf(m.group());
+//			discar third line
+			br.readLine();
+//			get number of nodes			
+			m = p.matcher(br.readLine()); 
 			m.find();
 			Integer numOfNodes = Integer.valueOf(m.group(0)); 
 //			discard next line
@@ -98,7 +59,7 @@ public class InstancesGenerator {
 			Integer x = Integer.valueOf(m.group());
 			m.find();
 			Integer y = Integer.valueOf(m.group());											
-			depot = new Node(x, y);
+			depot = new NodeData(x, y);
 			while(true) {				
 				st = br.readLine();
 				m = p.matcher(st); 
@@ -109,7 +70,7 @@ public class InstancesGenerator {
 				x = Integer.valueOf(m.group());
 				m.find();
 				y = Integer.valueOf(m.group());								
-				customers.put(id, new Node(x, y));
+				customers.put(id, new NodeData(x, y));
 			}
 //			get demands
 			while(true) {
@@ -119,7 +80,7 @@ public class InstancesGenerator {
 					break;
 				Integer id = Integer.valueOf(m.group());
 				m.find();
-				Node node = customers.get(id);
+				NodeData node = customers.get(id);
 				if (node != null)
 					node.demand = Double.valueOf(m.group());
 			}
@@ -132,7 +93,7 @@ public class InstancesGenerator {
 				maxY = Integer.MIN_VALUE,
 				minX = Integer.MAX_VALUE,
 				minY = Integer.MAX_VALUE;
-		for (Node node : customers.values()) {
+		for (NodeData node : customers.values()) {
 			if (node.x > maxX)
 				maxX = node.x;
 			if (node.y > maxY)
@@ -152,20 +113,20 @@ public class InstancesGenerator {
 			minY = depot.y;
 		Integer Xlength = maxX - minX;
 		Integer Ylength = maxY - minY;
-//		get vehicle capacity
-		vehicleAutonomy = (int) Math.floor((Xlength + Ylength)/3);
+//		calculate vehicle autonomy
+		vehicleAutonomy = Math.floorDiv(opt, 2);
 		
 //		generate random afss
 		Random random = new Random();	
 		random.setSeed(System.currentTimeMillis());
-		Set<Node> afss;
+		Set<NodeData> afss;
 		while(true) {
-			afss = new HashSet<Node> (afssNumber);
+			afss = new HashSet<NodeData> (afssNumber);
 			afss.add(depot);
 //			generate afss
 			System.out.println("\tGenerating AFSs");
 			for (int i = 0; i < afssNumber; i++) {
-				Node afs = new Node (minX + random.nextInt(Xlength), minY + random.nextInt(Ylength));
+				NodeData afs = new NodeData (minX + random.nextInt(Xlength), minY + random.nextInt(Ylength));
 				if (!afss.contains(afs) && !customers.containsValue(afs)) 
 					afss.add(afs);
 				else
@@ -175,10 +136,10 @@ public class InstancesGenerator {
 //			check if each customers have at least one afs at a maximum of distance of \beta/2
 			System.out.println("\tChecking if each customers have at least one afs at a maximum of distance of \\beta/2");
 			boolean infeasibleInstance = false;
-			for (Node b : customers.values()) {
+			for (NodeData b : customers.values()) {
 				boolean afsCloserEnough = false;
-				for (Node e : afss) {
-					if (getDistance(b, e) <= vehicleAutonomy/2) {
+				for (NodeData e : afss) {
+					if (Util.get2DEuclidianDistance(b, e) <= vehicleAutonomy/2) {
 						afsCloserEnough = true;
 						break;
 					}
@@ -195,10 +156,10 @@ public class InstancesGenerator {
 			System.out.println("\tCustomers at good distance");
 //			generate tree
 			System.out.println("\tChecking if each afs have at least one afs at a maximum of distance of \\beta");
-			for (Node b : afss) {
+			for (NodeData b : afss) {
 				boolean afsCloserEnough = false;
-				for (Node e : afss) {					
-					if (!b.equals(e) && getDistance(b, e) <= vehicleAutonomy) {
+				for (NodeData e : afss) {					
+					if (!b.equals(e) && Util.get2DEuclidianDistance(b, e) <= vehicleAutonomy) {
 						b.neighborhoods.add(e);
 						e.neighborhoods.add(b);
 						afsCloserEnough = true;
@@ -224,10 +185,10 @@ public class InstancesGenerator {
 		}
 		System.out.println("AFSS generated");
 //		check if instance is valid
-		for (Node b : afss) {
+		for (NodeData b : afss) {
 			boolean afsCloserEnough = false;
-			for (Node e : afss) {					
-				if (!b.equals(e) && getDistance(b, e) <= vehicleAutonomy) {					
+			for (NodeData e : afss) {					
+				if (!b.equals(e) && Util.get2DEuclidianDistance(b, e) <= vehicleAutonomy) {					
 					afsCloserEnough = true;
 					break;
 				}
@@ -237,10 +198,10 @@ public class InstancesGenerator {
 				break;
 			}
 		}	
-		for (Node b : customers.values()) {
+		for (NodeData b : customers.values()) {
 			boolean afsCloserEnough = false;
-			for (Node e : afss) {
-				if (getDistance(b, e) <= vehicleAutonomy/2) {
+			for (NodeData e : afss) {
+				if (Util.get2DEuclidianDistance(b, e) <= vehicleAutonomy/2) {
 					afsCloserEnough = true;
 					break;
 				}
@@ -253,27 +214,30 @@ public class InstancesGenerator {
 //		write file		
 		try {
 			BufferedWriter writer = new BufferedWriter(new FileWriter(fileName + ".gvrp"));
-			String str = "NAME: A-n" + customers.size() + "-f"+afss.size()+"\n"
+			String str = "NAME: A-n" + (customers.size() + 1) + "-f"+(afss.size() - 1)+"\n"
 					+ "COMMENT : -\n"
 					+ "TYPE : GVRP\n"
-					+ "DIMENSION : "+ (customers.size() +afss.size() - 1) + "\n"
+					+ "DIMENSION : "+ (customers.size() + afss.size() - 1) + "\n"
 					+ "EDGE_WEIGHT_TYPE : EUC_2D\n"
 					+ "CAPACITY : "+vehicleCapacity+"\n"
 					+ "AUTONOMY : "+vehicleAutonomy+"\n"
+					+ "TIME LIMIT : 11\n"
+					+ "SPEED : 40\n"
+					+ "FUEL CONSUMPTION : 0.2\n"
 					+ "DEPOT_COORD_SECTION\n"
 					+ "1 " + depot.x + " " + depot.y + "\n"
 					+ "CUSTOMER_COORD_SECTION\n";
 			List<Integer> ids = new ArrayList<Integer> (customers.keySet());
 			Collections.sort(ids);			
 			for (Integer id: ids) {
-				Node node = customers.get(id);
-				str += id + " " + node.x + " " + node.y + "\n";
+				NodeData node = customers.get(id);
+				str += id + " " + node.x + " " + node.y + " " + (int) node.demand + " " + random.nextDouble() + "\n";
 			}
 			str += "AFS_COORD_SECTION\n";
 			Integer afsId = ids.get(ids.size() - 1) + 1;
 			afss.remove(depot);
-			for (Node afs : afss) {
-				str += afsId + " " + afs.x + " " + afs.y + "\n";
+			for (NodeData afs : afss) {
+				str += afsId + " " + afs.x + " " + afs.y  + " " + random.nextDouble() + "\n";
 				afsId++;
 			}
 			str += "EOF";
