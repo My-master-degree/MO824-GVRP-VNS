@@ -131,38 +131,64 @@ public class Main {
 			"Large_VA_Input_500c_21s.txt",	
 		};
 //		all instances
-//		Stream<String> stream = Stream.of();
-//		for (String[] s: new String[][] {s1instances, s2instances, s3instances, s4instances, largeInstances, })
-//			stream = Stream.concat(stream, Arrays.stream(s));
-//		String[] instances = stream.toArray(String[]::new);
-		String[] instances = s3instances;
-//	
-		for (int i = 0; i < instances.length; i++) {
+		Stream<String> stream = Stream.of();
+		for (String[] s: new String[][] {s1instances, s2instances, s3instances, s4instances, largeInstances, })
+			stream = Stream.concat(stream, Arrays.stream(s));
+		String[] instances = stream.toArray(String[]::new);
+//		String[] instances = s3instances;
+		
+//		for (int i = 0; i < instances.length; i++) {
+//		for (int i = 0; i < s1instances.length; i++) {
+//		for (int i = 0; i < s2instances.length; i++) {
+//		for (int i = 0; i < s3instances.length; i++) {
+//		for (int i = 0; i < s4instances.length; i++) {
+//		for (int i = 0; i < largeInstances.length; i++) {
 //			System.out.print(instances[i]+": ");
-//			GVRP_Inverse gvrp = new GVRP_Inverse("instances/"+instances[i]);			
+//			GVRP_Inverse gvrp = new GVRP_Inverse("instances/"+instances[i]);
+			
 //			Solution<List<Integer>> sol = MCWS.construct(gvrp);
-////			System.out.println(gvrp.toString());
+//			System.out.println(gvrp.toString());
 //			Util.printGVRPSolutionDistance(sol, gvrp);
 //			Analyzer.analyze(sol, gvrp);		
+//			break;		
+//		}		
+		String[] cvrpInstances = new String[]{				
+			"A-n32-k5.vrp",
+			"A-n33-k5.vrp",
+			"A-n33-k6.vrp",
+			"A-n34-k5.vrp",
+			"A-n36-k5.vrp",
+			"A-n37-k5.vrp",
+			"A-n37-k6.vrp",
+			"A-n38-k5.vrp",
+			"A-n39-k5.vrp",
+			"A-n39-k6.vrp",
+			"A-n44-k7.vrp",
+			"A-n45-k6.vrp",
+			"A-n45-k7.vrp",
+			"A-n46-k7.vrp",
+			"A-n48-k7.vrp",
+			"A-n53-k7.vrp",
+			"A-n54-k7.vrp",
+			"A-n55-k9.vrp",
+			"A-n60-k9.vrp",
+			"A-n61-k9.vrp",
+			"A-n62-k8.vrp",
+			"A-n63-k10.vrp",
+			"A-n63-k9.vrp",
+			"A-n64-k9.vrp",
+			"A-n65-k9.vrp",
+			"A-n69-k9.vrp",
+			"A-n80-k10.vrp",
+		};
+		for (String cvrpInstance: cvrpInstances) {
+			System.out.println(cvrpInstance);
+			Pattern p = Pattern.compile("(\\d+)");
+			Matcher m = p.matcher(cvrpInstance); 
+			m.find();			
+			m.find();			
+			InstancesGenerator.generate("CVRP Instances/"+cvrpInstance, Integer.valueOf(m.group()));
 //			break;
-			
-			String text    =
-			        "This is the text which is to be searched " +
-			        "for occurrences of the word 'is'.";
-
-			String regex = "is";
-
-			Pattern pattern = Pattern.compile(regex);
-			Matcher matcher = pattern.matcher(text);
-
-			int count = 0;
-			while(matcher.find()) {
-			    count++;
-			    System.out.println("found: " + count + " : "
-			            + matcher.start() + " - " + matcher.end());
-			}
-			
-			
 		}		
 	}
 	
