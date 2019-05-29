@@ -10,6 +10,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import problems.gvrp.GVRP;
 import problems.gvrp.GVRP_Inverse;
@@ -62,7 +63,7 @@ public class MCWS {
 			Integer bestStationBefore = null, 
 					bestStationAfter = null;
 			Double bestStationSaving = Double.MAX_VALUE;
-			for (int f = gvrp.customersSize + 1; f < gvrp.size; f++) {
+			for (Integer f: gvrp.rechargeStationsRefuelingTime.keySet()) {
 //				check insert before
 				if (gvrp.getFuelConsumption(0, f, customer, 0) <= gvrp.vehicleAutonomy &&
 					gvrp.getTimeConsumption(0, f, customer, 0) <= gvrp.vehicleOperationTime) {
@@ -83,7 +84,7 @@ public class MCWS {
 					}
 				}
 //				check insert before and after at same time
-				for (int _f = gvrp.customersSize + 1; _f < gvrp.size; _f++) {					
+				for (Integer _f: gvrp.rechargeStationsRefuelingTime.keySet()) {					
 					if (gvrp.getFuelConsumption(0, f, customer, _f, 0) <= gvrp.vehicleAutonomy &&
 						gvrp.getTimeConsumption(0, f, customer, _f, 0) <= gvrp.vehicleOperationTime) {
 						Double saving = gvrp.getDistance(0, f, customer, _f, 0) - gvrp.getDistance(0, customer, 0);
@@ -91,6 +92,7 @@ public class MCWS {
 							bestStationSaving = saving;
 							bestStationBefore = f;
 							bestStationAfter = _f;
+							System.out.println("Insert both");
 						}
 					}					
 				}
@@ -100,80 +102,89 @@ public class MCWS {
 				infeasibleRoute.add(1, bestStationBefore);
 			if (bestStationAfter != null) 
 				infeasibleRoute.add(infeasibleRoute.size() - 1, bestStationAfter);
-			feasibleRoutes.add(infeasibleRoute);
+			if (gvrp.getFuelConsumption(infeasibleRoute) <= gvrp.vehicleAutonomy &&
+				gvrp.getTimeConsumption(infeasibleRoute) <= gvrp.vehicleOperationTime) {
+				feasibleRoutes.add(infeasibleRoute);
+			}			
 		}
-//		compute savings
-		List<Saving> savingsPairList = computeSavings(feasibleRoutes, gvrp);
 //      merge routes
-        while(savingsPairList.size() > 0) {
-        	Saving saving = savingsPairList.remove(0);
-        	List<Integer> newRoute = new ArrayList<Integer>(saving.route1.size() + saving.route2.size() - 2);
-//        	perform merge
-        	if (saving.merge_type == MCWS.MERGE_FIRST_FIRST) {
-        		List<Integer> route1_inverse = new ArrayList<Integer> (saving.route1);
-        		Collections.reverse(route1_inverse);
-        		newRoute.addAll(route1_inverse.subList(0, route1_inverse.size() - 1));
-        		newRoute.addAll(saving.route2.subList(1, saving.route2.size()));
-        	}else if (saving.merge_type == MCWS.MERGE_FIRST_LAST) {
-        		List<Integer> route1_inverse = new ArrayList<Integer> (saving.route1);
-        		List<Integer> route2_inverse = new ArrayList<Integer> (saving.route2);
-        		Collections.reverse(route1_inverse);
-        		Collections.reverse(route2_inverse);
-        		newRoute.addAll(route1_inverse.subList(0, route1_inverse.size() - 1));
-        		newRoute.addAll(route2_inverse.subList(1, route2_inverse.size()));
-        	}else if (saving.merge_type == MCWS.MERGE_LAST_FIRST) {
-        		newRoute.addAll(saving.route1.subList(0, saving.route1.size() - 1));
-        		newRoute.addAll(saving.route2.subList(1, saving.route2.size()));
-        	}else if (saving.merge_type == MCWS.MERGE_LAST_LAST) {
-        		List<Integer> route2_inverse = new ArrayList<Integer> (saving.route2);
-        		Collections.reverse(route2_inverse);
-        		newRoute.addAll(saving.route1.subList(0, saving.route1.size() - 1));
-        		newRoute.addAll(route2_inverse.subList(1, route2_inverse.size()));
-        	}
-        	if (gvrp.getCapacityConsumption(newRoute) > gvrp.vehicleCapacity) {        		
-        		continue;
-        	}        		
-//        	check feasibility
-        	if (gvrp.getFuelConsumption(newRoute) > gvrp.vehicleAutonomy && 
-        			gvrp.getTimeConsumption(newRoute) <= gvrp.vehicleOperationTime) {
-//        		insert station
-        		Double cost = Double.MAX_VALUE;
-        		Integer bestFuelStation = gvrp.customersSize + 1;
-        		for (int i = gvrp.customersSize + 1; i < gvrp.size; i++) {
-					Double currentCost = gvrp.getDistance(saving.node1, i, saving.node2);
-					if (currentCost < cost) {
-						cost = currentCost;
-						bestFuelStation = i;
-					}
-				}
-        		newRoute.add(newRoute.indexOf(saving.node2), bestFuelStation);
-        	} 
-//        	solutions keeps infeasible
-        	if (gvrp.getFuelConsumption(newRoute) > gvrp.vehicleAutonomy)
-    			break;
-        	if (gvrp.getTimeConsumption(newRoute) <= gvrp.vehicleOperationTime) {
-//        		remove redundant stations
-        		for (Integer vertex : newRoute) {
-					if (gvrp.rechargeStationsRefuelingTime.get(vertex) != null) {
-						List<Integer> newRouteTest = new ArrayList<Integer> (newRoute);
-						newRouteTest.remove(vertex);
-						if (gvrp.getFuelConsumption(newRouteTest) <= gvrp.vehicleAutonomy && 
-								gvrp.getTimeConsumption(newRouteTest) <= gvrp.vehicleOperationTime) {
-							newRoute = newRouteTest;
-							break;
+		boolean mergeDone = true;
+		while (mergeDone) {
+			mergeDone = false;
+//			compute savings
+			List<Saving> savingsPairList = computeSavings(feasibleRoutes, gvrp);				
+			for (int j = 0; j < savingsPairList.size(); j++) {
+				Saving saving = savingsPairList.remove(j);
+	        	List<Integer> newRoute = new ArrayList<Integer>(saving.route1.size() + saving.route2.size() - 2);	        	
+//	        	perform merge
+	        	if (saving.merge_type == MCWS.MERGE_FIRST_FIRST) {
+	        		List<Integer> route1_inverse = new ArrayList<Integer> (saving.route1);
+	        		Collections.reverse(route1_inverse);
+	        		newRoute.addAll(route1_inverse.subList(0, route1_inverse.size() - 1));
+	        		newRoute.addAll(saving.route2.subList(1, saving.route2.size()));
+	        	}else if (saving.merge_type == MCWS.MERGE_FIRST_LAST) {
+	        		List<Integer> route1_inverse = new ArrayList<Integer> (saving.route1);
+	        		List<Integer> route2_inverse = new ArrayList<Integer> (saving.route2);
+	        		Collections.reverse(route1_inverse);
+	        		Collections.reverse(route2_inverse);
+	        		newRoute.addAll(route1_inverse.subList(0, route1_inverse.size() - 1));
+	        		newRoute.addAll(route2_inverse.subList(1, route2_inverse.size()));
+	        	}else if (saving.merge_type == MCWS.MERGE_LAST_FIRST) {
+	        		newRoute.addAll(saving.route1.subList(0, saving.route1.size() - 1));
+	        		newRoute.addAll(saving.route2.subList(1, saving.route2.size()));
+	        	}else if (saving.merge_type == MCWS.MERGE_LAST_LAST) {
+	        		List<Integer> route2_inverse = new ArrayList<Integer> (saving.route2);
+	        		Collections.reverse(route2_inverse);
+	        		newRoute.addAll(saving.route1.subList(0, saving.route1.size() - 1));
+	        		newRoute.addAll(route2_inverse.subList(1, route2_inverse.size()));
+	        	}
+	        	if (gvrp.getCapacityConsumption(newRoute) > gvrp.vehicleCapacity) {  
+	        		continue;
+	        	}        		
+//	        	check feasibility
+	        	if (gvrp.getFuelConsumption(newRoute) > gvrp.vehicleAutonomy && 
+	        			gvrp.getTimeConsumption(newRoute) <= gvrp.vehicleOperationTime) {
+//	        		insert station
+	        		Double cost = Double.MAX_VALUE;
+	        		Integer bestFuelStation = null;
+	        		for (Integer i : gvrp.rechargeStationsRefuelingTime.keySet()) {
+						Double currentCost = gvrp.getDistance(saving.node1, i, saving.node2);
+						if (currentCost < cost) {
+							cost = currentCost;
+							bestFuelStation = i;
 						}
 					}
-				}
-        	}
-//        	solutions keeps infeasible
-        	if (gvrp.getTimeConsumption(newRoute) > gvrp.vehicleOperationTime)	
-        		break;        	
-//        	calculate again        	
-        	feasibleRoutes.remove(saving.route1);
-        	feasibleRoutes.remove(saving.route2);
-        	feasibleRoutes.add(newRoute);
-        	savingsPairList = computeSavings(feasibleRoutes, gvrp);
-        }
+	        		newRoute.add(newRoute.indexOf(saving.node2), bestFuelStation);
+	        	} 
+//	        	solutions keeps infeasible
+	        	if (gvrp.getFuelConsumption(newRoute) > gvrp.vehicleAutonomy) {
+	    			continue;    			
+	        	}
+	        	if (gvrp.getTimeConsumption(newRoute) <= gvrp.vehicleOperationTime) {
+//	        		remove redundant stations
+	        		for (Integer vertex : newRoute) {
+						if (gvrp.rechargeStationsRefuelingTime.get(vertex) != null) {
+							List<Integer> newRouteTest = new ArrayList<Integer> (newRoute);
+							newRouteTest.remove(vertex);
+							if (gvrp.getFuelConsumption(newRouteTest) <= gvrp.vehicleAutonomy) {
+								newRoute = newRouteTest;
+								break;
+							}
+						}
+					}
+	        	}
+//	        	solutions keeps infeasible
+	        	if (gvrp.getTimeConsumption(newRoute) > gvrp.vehicleOperationTime){
+	    			continue;    			
+	        	}
+//	        	calculate again        	
+	        	feasibleRoutes.remove(saving.route1);
+	        	feasibleRoutes.remove(saving.route2);
+	        	feasibleRoutes.add(newRoute);
+	        	mergeDone = true;
+				break;				
+			}
+		}
         
 		return feasibleRoutes;
 	}

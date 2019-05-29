@@ -48,7 +48,7 @@ public class InstanceReader {
 //			calculate distances and times			
 			List<Double[]> allNodes = new ArrayList<Double[]> (gvrp.customersSize + gvrp.rechargeStationsSize + 1);
 			allNodes.add(depotCoordinates);
-			allNodes.addAll(1, customersCoordinates);
+			allNodes.addAll(customersCoordinates);
 			allNodes.addAll(afssCoordinates);
 			gvrp.distanceMatrix = new Double[allNodes.size()][allNodes.size()];
 			gvrp.timeMatrix = new Double[allNodes.size()][allNodes.size()];
@@ -62,7 +62,7 @@ public class InstanceReader {
 				for (int j = i + 1; j < allNodes.size(); j++) {		
 					Double[] nodeJ = allNodes.get(j);
 					Double lon2 = nodeJ[0], 
-							lat2 = nodeI[1];						 
+							lat2 = nodeJ[1];						 
 					// miles, 6371km; 
 					double dLat = Math.toRadians(lat2-lat1); 
 					double dLon = Math.toRadians(lon2-lon1); 
@@ -81,9 +81,9 @@ public class InstanceReader {
 			gvrp.vehicleCapacity = 0d;
 			gvrp.customersDemands = new HashMap<Integer, Double> (gvrp.customersSize);
 			gvrp.customersServiceTime = new HashMap<Integer, Double> (gvrp.customersSize);
-			for (int i = 1; i <= gvrp.customersSize; gvrp.customersDemands.put(i, 0d), gvrp.customersServiceTime.put(i, 0d), i++);			
+			for (int i = 1; i <= gvrp.customersSize; gvrp.customersDemands.put(i, 0d), gvrp.customersServiceTime.put(i, 0.25d), i++);			
 			gvrp.rechargeStationsRefuelingTime = new HashMap<Integer, Double> ();
-			for (int i = 1; i <= gvrp.rechargeStationsSize; gvrp.rechargeStationsRefuelingTime.put(gvrp.customersSize + i, 0d), i++);
+			for (int i = 1; i <= gvrp.rechargeStationsSize; gvrp.rechargeStationsRefuelingTime.put(gvrp.customersSize + i, 0.5d), i++);
 			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block

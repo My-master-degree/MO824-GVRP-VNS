@@ -250,4 +250,21 @@ public class GVRP implements Evaluator<List<Integer>> {
 
 	}
 
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "GVRP ["
+				+ "\n\tcustomersSize=" + customersSize + 
+				"\n\trechargeStationsSize=" + rechargeStationsSize + 
+				"\n\tvehicleCapacity=" + vehicleCapacity + 
+				"\n\tvehicleAutonomy=" + vehicleAutonomy + 
+				"\n\tvehicleOperationTime=" + vehicleOperationTime + 
+				"\n\tvehicleConsumptionRate=" + vehicleConsumptionRate +
+				"\n]";
+	}
+	
+	
+
 }
