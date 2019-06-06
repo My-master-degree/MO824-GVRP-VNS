@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 
 import problems.Evaluator;
-import problems.gvrp.instances.EMHInstanceReader;
 import problems.gvrp.instances.MyInstanceReader;
 import solutions.Solution;
 
@@ -64,6 +63,12 @@ public class GVRP implements Evaluator<List<Integer>> {
 	 * 
 	 */
 	public Double vehicleConsumptionRate;
+	
+	
+	/**
+	 * Nodes coordinates.
+	 */
+	public Map<Integer, Integer[]> nodesCoordinates;
 
 	/**
 	 * The customers demands.

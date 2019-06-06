@@ -61,15 +61,19 @@ public class MyInstanceReader {
 //			get depot
 			m = p.matcher(br.readLine());
 			m.find();			
+			m.group();
+			m.find();
 			Integer x = Integer.valueOf(m.group());
 			m.find();
 			Integer y = Integer.valueOf(m.group());
-			depotCoordinates = new NodeData(x, y);
+			depotCoordinates = new NodeData(0, x, y);
 //			discard a line
 			br.readLine();
 //			get customers			
 			gvrp.customersDemands = new HashMap<Integer, Double> (gvrp.customersSize);
 			gvrp.customersServiceTime = new HashMap<Integer, Double> (gvrp.customersSize);
+			gvrp.nodesCoordinates = new HashMap<Integer, Integer[]> (gvrp.customersSize);
+			gvrp.nodesCoordinates.put(0, new Integer[] {x, y});
 			int i = 1;
 			while(true) {				
 				String st = br.readLine();
@@ -80,7 +84,8 @@ public class MyInstanceReader {
 				x = Integer.valueOf(m.group());
 				m.find();
 				y = Integer.valueOf(m.group());								
-				customersCoordinates.add(new NodeData (x, y));
+				customersCoordinates.add(new NodeData (i, x, y));
+				gvrp.nodesCoordinates.put(i, new Integer[] {x, y});
 				m.find();
 				gvrp.customersDemands.put(i, Double.valueOf(m.group()));
 				m.find();
@@ -89,7 +94,6 @@ public class MyInstanceReader {
 			}
 //			get afss
 			gvrp.rechargeStationsRefuelingTime = new HashMap<Integer, Double> ();
-			i = 1;
 			while(true) {				
 				String st = br.readLine();
 				m = p.matcher(st); 
@@ -99,9 +103,10 @@ public class MyInstanceReader {
 				x = Integer.valueOf(m.group());
 				m.find();
 				y = Integer.valueOf(m.group());								
-				afssCoordinates.add(new NodeData (x, y));
+				afssCoordinates.add(new NodeData (i, x, y));
+				gvrp.nodesCoordinates.put(i, new Integer[] {x, y});
 				m.find();
-				gvrp.rechargeStationsRefuelingTime.put(gvrp.customersSize + i, Double.valueOf(m.group()));
+				gvrp.rechargeStationsRefuelingTime.put(i, Double.valueOf(m.group()));
 				i++;
 			}
 //			get remaining datas
