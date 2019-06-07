@@ -87,16 +87,19 @@ public class ShortestPaths {
 				}                      				
 			}		
 			if (s.isEmpty()) {
-				System.out.println(customer + " no path");
+//				System.out.println(customer + " no path");
 			}else if (s.size() > 3){
-				for (Integer integer : s) {
-					System.out.print(integer+",");
-				}
-				System.out.println();
+//				for (Integer integer : s) {
+//					System.out.print(integer+",");
+//				}
+//				System.out.println();
 			}
-			List<Integer> route = new ArrayList<Integer> ();
-			for (Integer integer : s) {
-				route.add(0, integer);
+			List<Integer> route = new ArrayList<Integer> ();			
+			for (int i = s.size() - 1; i >= 0; i--) {
+				route.add(s.get(i));
+			}		
+			for (int i = 1; i < s.size(); i++) {
+				route.add(s.get(i));
 			}
 			routes.add(route);
 		}

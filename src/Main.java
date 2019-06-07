@@ -1,8 +1,6 @@
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -68,8 +66,9 @@ public class Main {
 //			}
 			
 //			System.out.println(gvrp.toString());
-			ShortestPaths sp = new ShortestPaths(); 
-			sp.construct(gvrp);
+			ShortestPaths sp = new ShortestPaths(); 			
+			Analyzer.analyze(sp.construct(gvrp), gvrp);		
+			
 //			break;
 		}
 	}
