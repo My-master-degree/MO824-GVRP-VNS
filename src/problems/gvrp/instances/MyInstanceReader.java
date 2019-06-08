@@ -21,7 +21,7 @@ public class MyInstanceReader {
 		File file = new File(path); 		
 		BufferedReader br;
 		try {
-			br = new BufferedReader(new FileReader(file));
+			br = new BufferedReader(new FileReader(file));			
 //			get number of customers and afs
 			Pattern p = Pattern.compile("(\\d+)");
 			Matcher m = p.matcher(br.readLine());			
@@ -131,7 +131,8 @@ public class MyInstanceReader {
 				}
 			}
 //			set values
-			gvrp.size = allNodes.size();			
+			gvrp.size = allNodes.size();
+			gvrp.name = "n"+gvrp.customersSize+"k"+gvrp.rechargeStationsSize+".gvrp";
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

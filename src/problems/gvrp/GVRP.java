@@ -1,6 +1,7 @@
 package problems.gvrp;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -94,6 +95,8 @@ public class GVRP implements Evaluator<List<Integer>> {
 	 * The matrix of time among the graph nodes
 	 */
 	public Double[][] timeMatrix;
+
+	public String name;
 
 	/**
 	 * The constructor for Green-VRP class. The filename of the

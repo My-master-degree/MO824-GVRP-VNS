@@ -6,11 +6,16 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import gurobi.GRB;
+import gurobi.GRBEnv;
+import gurobi.GRBException;
+import gurobi.GRBModel;
 import problems.gvrp.GVRP_Inverse;
 import problems.gvrp.analyzer.Analyzer;
 import problems.gvrp.constructive_heuristic.MCWS;
 import problems.gvrp.constructive_heuristic.ShortestPaths;
 import problems.gvrp.instances.InstancesGenerator;
+import problems.qbf.solvers.Gurobi_GVRP;
 import solutions.Solution;
 
 public class Main {
@@ -19,11 +24,12 @@ public class Main {
 //		instancesGenerator();
 //		System.exit(0);
 		String[] gvrpInstances = new String[] {
-//			"A-n32-k5.vrp.gvrp",
-//			"A-n33-k5.vrp.gvrp",
-//			"A-n33-k6.vrp.gvrp",
-//			"A-n34-k5.vrp.gvrp",
-//			"A-n36-k5.vrp.gvrp",
+			"A-n06-k2.vrp.gvrp",
+			"A-n32-k5.vrp.gvrp",
+			"A-n33-k5.vrp.gvrp",
+			"A-n33-k6.vrp.gvrp",
+			"A-n34-k5.vrp.gvrp",
+			"A-n36-k5.vrp.gvrp",
 			"A-n37-k5.vrp.gvrp",
 			"A-n37-k6.vrp.gvrp",
 			"A-n38-k5.vrp.gvrp",
@@ -47,30 +53,7 @@ public class Main {
 			"A-n69-k9.vrp.gvrp",
 			"A-n80-k10.vrp.gvrp",
 		};
-		for (int i = 0; i < gvrpInstances.length; i++) {	
-			GVRP_Inverse gvrp = new GVRP_Inverse("CVRP Instances/"+gvrpInstances[i]);
-			
-//			System.out.println(0+ " " + gvrp.nodesCoordinates.get(0)[0] + " " + gvrp.nodesCoordinates.get(0)[1]);
-//			
-//			List<Integer> customers = new ArrayList<Integer> (gvrp.customersDemands.keySet());
-//			Collections.sort(customers);
-//			for (Integer customer: customers) {
-//				System.out.println(customer + " " + gvrp.nodesCoordinates.get(customer)[0] + " " + gvrp.nodesCoordinates.get(customer)[1]);
-//			}
-//			
-//			
-//			List<Integer> afss = new ArrayList<Integer> (gvrp.rechargeStationsRefuelingTime.keySet());
-//			Collections.sort(afss);
-//			for (Integer afs: afss) {
-//				System.out.println(afs+ " " + gvrp.nodesCoordinates.get(afs)[0] + " " + gvrp.nodesCoordinates.get(afs)[1]);
-//			}
-			
-//			System.out.println(gvrp.toString());
-			ShortestPaths sp = new ShortestPaths(); 			
-			Analyzer.analyze(sp.construct(gvrp), gvrp);		
-			
-//			break;
-		}
+		runGurobi(gvrpInstances);
 	}
 	
 	public static void readErdoganInstances() throws IOException {
@@ -154,7 +137,8 @@ public class Main {
 	}
 	
 	public static void instancesGenerator() {
-		String[] cvrpInstances = new String[]{				
+		String[] cvrpInstances = new String[]{
+				"A-n06-k2.vrp",
 //				"A-n32-k5.vrp",
 //				"A-n33-k5.vrp",
 //				"A-n33-k6.vrp",
@@ -193,8 +177,31 @@ public class Main {
 				m.find();			
 				InstancesGenerator.verbose = false;
 				InstancesGenerator.generate("CVRP Instances/"+cvrpInstance, Integer.valueOf(m.group()));
-//				break;
+				break;
 			}		
+	}
+	
+	public static void runGurobi(String[] instances) {		
+//		Linear version
+		for (int i = 0; i < instances.length; i++) {
+			// instance name
+			Gurobi_GVRP gurobi;
+			try {
+				gurobi = new Gurobi_GVRP("CVRP Instances/"+instances[i]);
+				Solution<List<Integer>> sol = gurobi.run();
+				for (List<Integer> list : sol) {
+					for (Integer integer : list) {
+						System.out.print(integer + ",");
+					}
+					System.out.println();
+				}
+				Analyzer.analyze(sol, gurobi.problem);
+			} catch (IOException | GRBException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}	
+			break;
+		}		
 	}
 	
 }
