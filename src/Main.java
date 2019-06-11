@@ -24,7 +24,9 @@ public class Main {
 //		instancesGenerator();
 //		System.exit(0);
 		String[] gvrpInstances = new String[] {
+			"A-n05-k2.vrp.gvrp",				
 			"A-n06-k2.vrp.gvrp",
+			"A-n07-k3.vrp.gvrp",
 			"A-n32-k5.vrp.gvrp",
 			"A-n33-k5.vrp.gvrp",
 			"A-n33-k6.vrp.gvrp",
@@ -53,7 +55,8 @@ public class Main {
 			"A-n69-k9.vrp.gvrp",
 			"A-n80-k10.vrp.gvrp",
 		};
-		runGurobi(gvrpInstances);
+		runGurobi(gvrpInstances);		
+//		runShortestPaths(gvrpInstances);
 	}
 	
 	public static void readErdoganInstances() throws IOException {
@@ -138,7 +141,9 @@ public class Main {
 	
 	public static void instancesGenerator() {
 		String[] cvrpInstances = new String[]{
-				"A-n06-k2.vrp",
+//				"A-n05-k2.vrp",
+//				"A-n06-k2.vrp",
+				"A-n07-k3.vrp",
 //				"A-n32-k5.vrp",
 //				"A-n33-k5.vrp",
 //				"A-n33-k6.vrp",
@@ -200,6 +205,30 @@ public class Main {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}	
+			break;
+		}		
+	}
+	
+	public static void runShortestPaths(String[] instances) {		
+//		Linear version
+		for (int i = 0; i < instances.length; i++) {
+			// instance name
+			ShortestPaths sp = new ShortestPaths();
+			GVRP_Inverse gvrp;
+			try {
+				gvrp = new GVRP_Inverse("CVRP Instances/"+instances[i]);
+				Solution<List<Integer>> sol = sp.construct(gvrp);
+				for (List<Integer> list : sol) {
+					for (Integer integer : list) {
+						System.out.print(integer + ",");
+					}
+					System.out.println(": "+gvrp.getFuelConsumption(list) + " " + gvrp.getTimeConsumption(list));
+				}				
+				Analyzer.analyze(sol, gvrp);
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			} 						
 			break;
 		}		
 	}

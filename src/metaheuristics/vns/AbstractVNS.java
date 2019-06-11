@@ -3,43 +3,38 @@
  */
 package metaheuristics.vns;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 import problems.Evaluator;
+import problems.bpp.BPP;
+import problems.bpp.BPP_Inverse;
+import problems.bpp.Bin;
+import problems.bpp.Bins;
 import solutions.Solution;
 
 /**
- * Abstract class for metaheuristic GRASP (Greedy Randomized Adaptive Search
- * Procedure). It consider a maximization problem.
+ * Abstract class for metaheuristic VNS (Variable Neighborhood Search). 
+ * It consider a maximization problem.
  * 
- * @author ccavellucci, fusberti
+ * @author matheus diógenes, cristina freitas
  * @param <E>
  *            Generic type of the element which composes the solution.
  */
-public abstract class AbstractVNS<E> {
-
-	/**
-	 * Class used to represent a neighborhood structure 
-	 *
-	 */
-	public abstract class NeighborhoodStructure {
-		
-		/**
-		 * Returns an random solution from a the neighborhood structure space
-		 * 
-		 * @return An random solution.
-		 */
-		public abstract Solution<E> randomSolution(Solution<E> solution);
-		
-		/**
-		 * Returns the local optimal solution from a the neighborhood structure space
-		 * 
-		 * @return The local optimal solution.
-		 */
-		public abstract Solution<E> localOptimalSolution(Solution<E> solution);
+public abstract class AbstractVNS<E extends Evaluator<T, S>, S extends Solution<T>, T> {
+	
+	public enum VNS_TYPE{
+		INTENSIFICATION(1),
+		NONE(4);
+		VNS_TYPE(int type){
+			this.type = type;
+		}
+		int type;
 	}
+	
+	protected int a;
+	
+	protected VNS_TYPE vns_type;
 	
 	/**
 	 * flag that indicates whether the code should print more information on
@@ -55,12 +50,12 @@ public abstract class AbstractVNS<E> {
 	/**
 	 * the neighborhood structure list
 	 */
-	protected List<NeighborhoodStructure> neighborhoodStructures;
+	protected List<LocalSearch<E, S>> neighborhoodStructures;
 	
 	/**
 	 * the objective function being optimized
 	 */
-	protected Evaluator<E> ObjFunction;
+	protected E ObjFunction;
 
 	/**
 	 * the best solution cost
@@ -70,7 +65,7 @@ public abstract class AbstractVNS<E> {
 	/**
 	 * the best solution
 	 */
-	protected Solution<E> bestSol;
+	protected S bestSol;
 
 	/**
 	 * the number of iterations the VNS main loop executes.
@@ -80,7 +75,7 @@ public abstract class AbstractVNS<E> {
 	/**
 	 * the time in microseconds the VNS main loop executes.
 	 */
-	protected Integer maxDurationInMilliseconds;	
+	protected Integer maxDurationInMilliseconds;
 
 	/**
 	 * Constructor for the AbstractGRASP class.
@@ -93,11 +88,22 @@ public abstract class AbstractVNS<E> {
 	 * @param iterations
 	 *            The number of iterations which the GRASP will be executed.
 	 */
-	public AbstractVNS(Evaluator<E> objFunction, Integer iterations, Integer maxDurationInMilliseconds) {
+	public AbstractVNS(E objFunction, Integer iterations, Integer maxDurationInMilliseconds, 
+			List<LocalSearch<E, S>> localSearchs, VNS_TYPE vns_type) {
 		this.ObjFunction = objFunction;
 		this.maxNumberOfIterations = iterations;
 		this.maxDurationInMilliseconds = maxDurationInMilliseconds;
+		this.neighborhoodStructures = localSearchs;
+		this.vns_type = vns_type;
+		a = this.neighborhoodStructures.size();
 	}	
+	
+	private int getKStep(int i, int c) {
+		if(vns_type.equals(VNS_TYPE.INTENSIFICATION)) {
+			return i + (c%a)/(a-1);
+		}
+		return i + 1;
+	}
 	
 	/**
 	 * The GRASP mainframe. It consists of a loop, in which each iteration goes
@@ -106,52 +112,50 @@ public abstract class AbstractVNS<E> {
 	 * 
 	 * @return The best feasible solution obtained throughout all iterations.
 	 */
-	public Solution<E> solve() {
+	public S solve() {
+//		build initial solution
 		bestSol = constructiveHeuristic();
-		long startTime = System.currentTimeMillis();
-		for (int i = 0, j = 0; i < this.neighborhoodStructures.size() && j < maxNumberOfIterations && System.currentTimeMillis() > startTime + maxDurationInMilliseconds; i++, j++) {
-//			get random solution
-			Solution<E> randomSolution = this.neighborhoodStructures.get(i).randomSolution(this.bestSol);
+		S localOptimalSolution = bestSol;
+		this.ObjFunction.evaluate(localOptimalSolution);
+		long endTime = System.currentTimeMillis() + this.maxDurationInMilliseconds;
+//		set initial parameters							
+		for (int i = 0, j = 1, c = 0; 
+			i < this.neighborhoodStructures.size() &&
+			j < this.maxNumberOfIterations &&
+			System.currentTimeMillis() <= endTime
+			; c++, j++) {
+//			random solution
+			S randomSolution = this.neighborhoodStructures.get(i).randomSolution(this.ObjFunction, localOptimalSolution);
 			this.ObjFunction.evaluate(randomSolution);
-//			get local optimal solution
-			Solution<E> localOptimalSolution = localSearch(randomSolution);			
+//			local opt solution
+			localOptimalSolution = this.neighborhoodStructures.get(i).localOptimalSolution(this.ObjFunction, randomSolution);
 			this.ObjFunction.evaluate(localOptimalSolution);
 //			check cost
-			if (localOptimalSolution.cost > bestSol.cost) {
-				bestSol = new Solution<E>(localOptimalSolution);
+			if (localOptimalSolution.cost > bestSol.cost) {				
+				i = 0;
+				c = 0;
+				bestSol = (S) localOptimalSolution.clone();
+				this.ObjFunction.evaluate(bestSol);
 				if (verbose) {
-					System.out.println("(Iter. " + j + ") BestSol = " + bestSol);
+					System.out.println("\t(Iter. " + j + ") BestSol = " + bestSol);
 				}
-			}		
+			}else {
+				i = getKStep(i, c);
+			}
 		}
+		
 
 		return bestSol;
-	}
+	}	
+	
+	public abstract S constructiveHeuristic();
 
 	/**
-	 * The GRASP local search phase is responsible for repeatedly applying a
-	 * neighborhood operation while the solution is getting improved, i.e.,
-	 * until a local optimum is attained.
-	 * 
-	 * @return An local optimum solution.
+	 * @return the objFunction
 	 */
-	public abstract Solution<E> localSearch(Solution<E> solution);	
+	public E getObjFunction() {
+		return ObjFunction;
+	}
 	
-	/**
-	 * The GRASP constructive heuristic, which is responsible for building a
-	 * feasible solution by selecting in a greedy-random fashion, candidate
-	 * elements to enter the solution.
-	 * 
-	 * @return A feasible solution to the problem being maximized.
-	 */
-	public abstract Solution<E> constructiveHeuristic();
-	
-	/**
-	 * Creates a new solution which is empty, i.e., does not contain any
-	 * element.
-	 * 
-	 * @return An empty solution.
-	 */
-	public abstract Solution<E> createEmptySol();
 
 }

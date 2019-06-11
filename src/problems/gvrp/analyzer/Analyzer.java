@@ -27,9 +27,12 @@ public class Analyzer {
 				visitedCustomers.put(b, visitedCustomers.get(b) == null ? 0 : visitedCustomers.get(b) + 1);
 				visitedCustomers.put(e, visitedCustomers.get(e) == null ? 0 : visitedCustomers.get(b) + 1);
 //				System.out.print(b + ",");
+//				System.out.print(b + "-"+ e+ ":("+gvrp.distanceMatrix[b][e]/gvrp.vehicleConsumptionRate+")\t");
 				if (gvrp.getFuelConsumption(b, e) > gvrp.vehicleAutonomy) 
 					System.out.println("Edge ("+ b + ", "+ e +") of route "+i+" is bigger than vehicle autonomy");				
 			}
+//			System.out.println();
+//			System.out.println(gvrp.vehicleAutonomy);
 //			System.out.println(route.get(route.size() - 1));
 		}
 		for (Integer customer: gvrp.customersDemands.keySet()) {
