@@ -11,7 +11,7 @@ import solutions.Solution;
  * @author ccavellucci, fusberti
  * @param <E>
  */
-public interface Evaluator<E> {
+public interface Evaluator<E, S> {
 
 	/**
 	 * Gives the size of the problem domain. Typically this is the number of
@@ -29,6 +29,6 @@ public interface Evaluator<E> {
 	 *            the solution under evaluation.
 	 * @return the evaluation of a solution.
 	 */
-	public abstract Double evaluate(Solution<E> sol);
+	public abstract Double evaluate(S sol);
 
 }

@@ -1,4 +1,6 @@
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
@@ -20,6 +22,8 @@ import solutions.Solution;
 
 public class Main {
 	
+	private static final double TIME_LIMIT_GUROBI = 600;
+
 	public static void main(String[] args) throws IOException {
 //		instancesGenerator();
 //		System.exit(0);
@@ -141,14 +145,14 @@ public class Main {
 	
 	public static void instancesGenerator() {
 		String[] cvrpInstances = new String[]{
-//				"A-n05-k2.vrp",
-//				"A-n06-k2.vrp",
+				"A-n05-k2.vrp",
+				"A-n06-k2.vrp",
 				"A-n07-k3.vrp",
-//				"A-n32-k5.vrp",
-//				"A-n33-k5.vrp",
-//				"A-n33-k6.vrp",
-//				"A-n34-k5.vrp",
-//				"A-n36-k5.vrp",
+				"A-n32-k5.vrp",
+				"A-n33-k5.vrp",
+				"A-n33-k6.vrp",
+				"A-n34-k5.vrp",
+				"A-n36-k5.vrp",
 				"A-n37-k5.vrp",
 				"A-n37-k6.vrp",
 				"A-n38-k5.vrp",
@@ -182,7 +186,7 @@ public class Main {
 				m.find();			
 				InstancesGenerator.verbose = false;
 				InstancesGenerator.generate("CVRP Instances/"+cvrpInstance, Integer.valueOf(m.group()));
-				break;
+//				break;
 			}		
 	}
 	
@@ -193,25 +197,36 @@ public class Main {
 			Gurobi_GVRP gurobi;
 			try {
 				gurobi = new Gurobi_GVRP("CVRP Instances/"+instances[i]);
+				gurobi.TIME_LIMIT_GUROBI = TIME_LIMIT_GUROBI; 
 				Solution<List<Integer>> sol = gurobi.run();
-				for (List<Integer> list : sol) {
-					for (Integer integer : list) {
-						System.out.print(integer + ",");
+				if (sol != null) {
+	//				write routes
+					BufferedWriter writer = new BufferedWriter(new FileWriter("results/"+instances[i]));
+					String str = "";
+					for (List<Integer> list : sol) {
+						for (Integer integer : list) {
+							System.out.print(integer + ",");
+							str += integer + ",";							
+						}
+						str += "\n";
+						System.out.println();
 					}
-					System.out.println();
+					Analyzer.analyze(sol, gurobi.problem);
+					writer.write(str);		     
+				    writer.close();
 				}
-				Analyzer.analyze(sol, gurobi.problem);
 			} catch (IOException | GRBException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}	
-			break;
+//			break;
 		}		
 	}
 	
 	public static void runShortestPaths(String[] instances) {		
 //		Linear version
 		for (int i = 0; i < instances.length; i++) {
+			System.out.println(instances[i]);
 			// instance name
 			ShortestPaths sp = new ShortestPaths();
 			GVRP_Inverse gvrp;
@@ -229,7 +244,7 @@ public class Main {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			} 						
-			break;
+//			break;
 		}		
 	}
 	

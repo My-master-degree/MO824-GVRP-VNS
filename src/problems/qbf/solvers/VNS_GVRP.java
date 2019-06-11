@@ -10,16 +10,6 @@ import problems.gvrp.GVRP_Inverse;
 import problems.gvrp.constructive_heuristic.NearestNeighborhood;
 import solutions.Solution;
 
-
-
-/**
- * Metaheuristic GRASP (Greedy Randomized Adaptive Search Procedure) for
- * obtaining an optimal solution to a QBF (Quadractive Binary Function --
- * {@link #QuadracticBinaryFunction}). Since by default this GRASP considers
- * minimization problems, an inverse QBF function is adopted.
- * 
- * @author ccavellucci, fusberti
- */
 public class VNS_GVRP extends AbstractVNS<List<Integer>> {
 	
 	/**

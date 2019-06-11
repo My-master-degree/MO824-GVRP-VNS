@@ -132,7 +132,7 @@ public class MyInstanceReader {
 			}
 //			set values
 			gvrp.size = allNodes.size();
-			gvrp.name = "n"+gvrp.customersSize+"k"+gvrp.rechargeStationsSize+".gvrp";
+			gvrp.name = "n"+(gvrp.customersSize + 1)+"k"+gvrp.rechargeStationsSize+".gvrp";
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

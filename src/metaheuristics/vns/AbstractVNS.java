@@ -7,10 +7,6 @@ import java.util.List;
 import java.util.Random;
 
 import problems.Evaluator;
-import problems.bpp.BPP;
-import problems.bpp.BPP_Inverse;
-import problems.bpp.Bin;
-import problems.bpp.Bins;
 import solutions.Solution;
 
 /**

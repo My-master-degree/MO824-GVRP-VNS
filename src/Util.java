@@ -1,13 +1,15 @@
 import java.util.List;
 
 import problems.gvrp.GVRP;
+import problems.gvrp.Route;
+import problems.gvrp.Routes;
 import solutions.Solution;
 
 public class Util {
-	public static void printGVRPSolution(Solution<List<Integer>> sol, GVRP gvrp) {
+	public static void printGVRPSolution(Routes sol, GVRP gvrp) {
 		double cost = 0d;
 		for (int i = 0; i < sol.size(); i++) {
-			List<Integer> route = sol.get(i);
+			Route route = sol.get(i);
 			cost += gvrp.getDistance(route);
 			if (route.size() > 0) {
 				System.out.print("Route " + (i + 1) + ": " + route.get(0) + ",");

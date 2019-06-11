@@ -1,34 +1,13 @@
 package problems.gvrp;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.Reader;
-import java.io.StreamTokenizer;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 import problems.Evaluator;
 import problems.gvrp.instances.MyInstanceReader;
-import solutions.Solution;
 
-/**
- * A quadractic binary function (QBF) is a function that can be expressed as the
- * sum of quadractic terms: f(x) = \sum{i,j}{a_{ij}*x_i*x_j}. In matricial form
- * a QBF can be expressed as f(x) = x'.A.x 
- * The problem of minimizing a QBF is NP-hard [1], even when no constraints
- * are considered.
- * 
- * [1] Kochenberger, et al. The unconstrained binary quadratic programming
- * problem: a survey. J Comb Optim (2014) 28:58–81. DOI
- * 10.1007/s10878-014-9734-0.
- * 
- * @author ccavellucci, fusberti
- *
- */
-public class GVRP implements Evaluator<List<Integer>> {
+public class GVRP implements Evaluator<Route, Routes> {
 
 	/**
 	 * Dimension of the domain.
@@ -127,10 +106,18 @@ public class GVRP implements Evaluator<List<Integer>> {
 		return distance;
 	}
 	
-	public Double getDistance(List<Integer> indexes) {
+	public Double getDistance(Route indexes) {
 		Double distance = 0d;
 		for (int k = 0; k < indexes.size()- 1; k++) {
 			distance += this.distanceMatrix[indexes.get(k)][indexes.get(k + 1)];
+		}
+		return distance;
+	}
+	
+	public Double getDistance(Routes routes) {
+		Double distance = 0d;
+		for (Route route:routes) {
+			distance += this.getDistance(route);
 		}
 		return distance;
 	}
@@ -145,7 +132,7 @@ public class GVRP implements Evaluator<List<Integer>> {
 		return consumption;
 	}
 	
-	public Double getFuelConsumption(List<Integer> indexes) {
+	public Double getFuelConsumption(Route indexes) {
 		Double consumption = 0d;		
 		for (int k = 0; k < indexes.size() - 1; k++) {						
 			consumption += this.distanceMatrix[indexes.get(k)][indexes.get(k + 1)] * this.vehicleConsumptionRate;
@@ -177,7 +164,7 @@ public class GVRP implements Evaluator<List<Integer>> {
 		return consumption;
 	}
 	
-	public Double getTimeConsumption(List<Integer> indexes) {
+	public Double getTimeConsumption(Route indexes) {
 		Double consumption = 0d;
 		if (indexes.size() > 0) {
 			Double customerServiceTime = this.customersServiceTime.get(indexes.get(0)),
@@ -209,7 +196,7 @@ public class GVRP implements Evaluator<List<Integer>> {
 		return capacity;
 	}
 	
-	public Double getCapacityConsumption(List<Integer> indexes) {
+	public Double getCapacityConsumption(Route indexes) {
 		Double capacity = 0d;
 		for (int i = 0; i < indexes.size(); i++) {
 			Double demand = this.customersDemands.get(indexes.get(i));
@@ -236,9 +223,8 @@ public class GVRP implements Evaluator<List<Integer>> {
 	 * @return The evaluation of the GVRP.
 	 */
 	@Override
-	public Double evaluate(Solution<List<Integer>> sol) {
-
-		return sol.cost = 0d;
+	public Double evaluate(Routes sol) {
+		return sol.cost = this.getDistance(sol);
 
 	}
 

@@ -32,11 +32,13 @@ public class Gurobi_GVRP {
 	public GVRP problem;
 	public Map<Integer, Double> nodesShortestPathFuelConsumption;
 	public Map<Integer, Double> nodesShortestPathTimeConsumption;
+	public double TIME_LIMIT_GUROBI;
 
 	public Gurobi_GVRP(String filename) throws IOException {
 		this.problem = new GVRP(filename);
 		this.nodesShortestPathFuelConsumption = new HashMap<Integer, Double> ();
 		this.nodesShortestPathTimeConsumption = new HashMap<Integer, Double> ();
+		this.TIME_LIMIT_GUROBI = 120;
 //		afss
 		List<Stack<Integer>> afsPaths = Util.gvrpFromDepotToAFSDijkstra(problem);
 		for (Stack<Integer> path : afsPaths) {
@@ -53,7 +55,7 @@ public class Gurobi_GVRP {
 		List<Stack<Integer>> customersPaths = Util.gvrpCustomersDijkstra(problem);
 		for (Stack<Integer> path : customersPaths) {
 			for (Integer customer : problem.customersDemands.keySet()) {
-				if (path.contains(customer)) {
+				if (path.get(0).equals(customer)) {
 					this.nodesShortestPathFuelConsumption.put(customer, problem.distanceMatrix[customer][path.get(1)] * problem.vehicleConsumptionRate);
 //					this.nodesShortestPathFuelConsumption.put(customer, problem.getFuelConsumption(path));
 					this.nodesShortestPathTimeConsumption.put(customer, problem.getTimeConsumption(path));
@@ -75,7 +77,7 @@ public class Gurobi_GVRP {
 	
 	public void populateNewModel(GRBModel model) throws GRBException {
 //		params
-		int numberOfDummies = (2) * problem.customersSize;
+		int numberOfDummies = problem.customersSize;
 //		extend graph
 		List<Integer> v_line = new ArrayList<Integer>(problem.rechargeStationsSize * problem.customersSize);
 		v_line.add(0);		
@@ -112,8 +114,7 @@ public class Gurobi_GVRP {
 		for (int i = 0; i < v_line.size(); i++) {			
 			t[i] = model.addVar(0, problem.vehicleOperationTime, 0.0f, GRB.CONTINUOUS, "t[" + i + "]");			
 		}
-		model.update();
-
+		model.update();	
 		// objective function
 //		\sum_{i,j \in V' (i != j)} d_{ij} x_{ij} \forall i \in I
 		GRBLinExpr obj = new GRBLinExpr();
@@ -226,11 +227,12 @@ public class Gurobi_GVRP {
 					left.addTerm(1d, y[j]);
 					GRBLinExpr right = new GRBLinExpr();
 					right.addTerm(1d, y[i]);
-					right.addTerm(-problem.getFuelConsumption(i_line, j), x[i][j]);
+//					right.addTerm(-problem.getFuelConsumption(i_line, j), x[i][j]);
+					right.addTerm(-problem.distanceMatrix[i_line][j] * problem.vehicleConsumptionRate, x[i][j]);
 					right.addConstant(problem.vehicleAutonomy);
 					right.addTerm(-problem.vehicleAutonomy, x[i][j]);
 					model.addConstr(left, GRB.LESS_EQUAL, right, 
-						"y_"+j+" \\leq y_"+i+" - "+problem.getFuelConsumption(i_line, j)+" x{"+i+" "+j+"} + "+problem.vehicleAutonomy+" (1 - x_{"+i+" "+j+"})");
+						"y_"+j+" \\leq y_"+i+" - "+ (problem.distanceMatrix[i_line][j] * problem.vehicleConsumptionRate) + " x{"+i+" "+j+"} + "+problem.vehicleAutonomy+" (1 - x_{"+i+" "+j+"})");
 					model.addConstr(left, GRB.GREATER_EQUAL, 0, 
 							"y_"+j+" \\geq 0");
 				}
@@ -290,6 +292,14 @@ public class Gurobi_GVRP {
 		for (Integer afs : problem.rechargeStationsRefuelingTime.keySet()) {
 			for (int j = 1; j <= numberOfDummies; j++) {
 				int visit = getIthVisitOfAFS(j, afs);
+				expr = new GRBLinExpr();
+				expr.addTerm(1, x[afs][visit]);
+				model.addConstr(expr, GRB.EQUAL, 0,
+					"x_{"+afs+" "+visit+"} = 0 ");
+				expr = new GRBLinExpr();
+				expr.addTerm(1, x[visit][afs]);
+				model.addConstr(expr, GRB.EQUAL, 0,
+					"x_{"+visit+" "+afs+"} = 0 ");
 				for (int i = j + 1; i <= numberOfDummies; i++) {
 					int _visit = getIthVisitOfAFS(i, afs);
 					expr = new GRBLinExpr();
@@ -300,15 +310,7 @@ public class Gurobi_GVRP {
 					expr.addTerm(1, x[visit][_visit]);
 					model.addConstr(expr, GRB.EQUAL, 0,
 						"x_{"+visit+" "+_visit+"} = 0 ");
-				}
-				expr = new GRBLinExpr();
-				expr.addTerm(1, x[afs][visit]);
-				model.addConstr(expr, GRB.EQUAL, 0,
-					"x_{"+afs+" "+visit+"} = 0 ");
-				expr = new GRBLinExpr();
-				expr.addTerm(1, x[visit][afs]);
-				model.addConstr(expr, GRB.EQUAL, 0,
-					"x_{"+visit+" "+afs+"} = 0 ");
+				}				
 			}	
 		}	
 		for (Integer i : v_line) {
@@ -330,11 +332,11 @@ public class Gurobi_GVRP {
 		model.set(GRB.IntAttr.ModelSense, GRB.MINIMIZE);
 	}
 
-	public Solution<List<Integer>> run() throws GRBException, IOException{		
+	public Solution<List<Integer>> run() throws GRBException, IOException{				
 		this.env = new GRBEnv();
 		this.model = new GRBModel(this.env);
 		// execution time in seconds 
-		this.model.getEnv().set(GRB.DoubleParam.TimeLimit, 120.0);
+		this.model.getEnv().set(GRB.DoubleParam.TimeLimit, this.TIME_LIMIT_GUROBI);
 		this.model.getEnv().set(GRB.IntParam.OutputFlag, 1);		  
 		// generate the model
 		this.populateNewModel(this.model);
@@ -342,70 +344,75 @@ public class Gurobi_GVRP {
 		this.model.write("model.lp");
 		long time = System.currentTimeMillis();
 		this.model.optimize();
-		time = System.currentTimeMillis() - time;
-//		System.out.println("\n\nZ* = " + this.model.get(GRB.DoubleAttr.ObjVal));
-		String str = "Z* = " + this.model.get(GRB.DoubleAttr.ObjVal)+"\n";
-//		System.out.println("\nTime = "+time);
-		str += "Time = " + time +"\n";
-//		System.out.println("\nGAP = "+this.model.get(GRB.DoubleAttr.MIPGap));
-		str += "GAP = " + this.model.get(GRB.DoubleAttr.MIPGap) +"\n";
-//		System.out.print("X = [");
-		str += "X = [";
-		for (int i = 0; i < this.problem.size; i++) {
-			for (int j = 0; j < this.problem.size; j++) {
-//	          System.out.print(gurobi.x[j].get(GRB.DoubleAttr.X) + ", ");
-	          str += this.x[i][j].get(GRB.DoubleAttr.X) + ", ";
-			}
-		}			
-//		System.out.println("]");
-		str += "]\n";
-//		get routes
-		System.out.print("   ");
-		for (int i = 0; i < x.length; i++) {
-			System.out.print(i + " ");
-		}
-		System.out.println();
-		for (int i = 0; i < x.length; i++) {
-			System.out.print(i + ": ");
-			for (int j = 0; j < x[i].length; j++) {
-				if (j > 9)
-					System.out.print(" ");
-				System.out.print((int) x[i][j].get(GRB.DoubleAttr.X) + " ");
+		try { 			  		
+			time = System.currentTimeMillis() - time;
+	//		System.out.println("\n\nZ* = " + this.model.get(GRB.DoubleAttr.ObjVal));
+			String str = "Z* = " + this.model.get(GRB.DoubleAttr.ObjVal)+"\n";
+	//		System.out.println("\nTime = "+time);
+			str += "Time = " + time +"\n";
+	//		System.out.println("\nGAP = "+this.model.get(GRB.DoubleAttr.MIPGap));
+			str += "GAP = " + this.model.get(GRB.DoubleAttr.MIPGap) +"\n";
+	//		System.out.print("X = [");
+			str += "X = [";
+			for (int i = 0; i < this.problem.size; i++) {
+				for (int j = 0; j < this.problem.size; j++) {
+	//	          System.out.print(gurobi.x[j].get(GRB.DoubleAttr.X) + ", ");
+		          str += this.x[i][j].get(GRB.DoubleAttr.X) + ", ";
+				}
+			}			
+	//		System.out.println("]");
+			str += "]\n";
+	//		get routes
+			System.out.print("   ");
+			for (int i = 0; i < x.length; i++) {
+				System.out.print(i + " ");
 			}
 			System.out.println();
-		}
-				
-		Solution<List<Integer>> routes = new Solution<List<Integer>>(); 
-		List<Integer> route = new ArrayList<Integer> ();
-		route.add(0);
-		int i = 0, j = 0, I = 0;
-		while (j < this.x.length) {
-			if (this.x[i][j].get(GRB.DoubleAttr.X) == 1d) {
-				route.add(j >= problem.size ? this.getAFSByVisit(j) : j);
-				if (j == 0) {
-					routes.add(route);
-					route = new ArrayList<Integer> ();
-					route.add(0);
-					i = j;
-					j = I;							
-				}else {
-					if (i == 0) {
-						I = j + 1;						
-					}
-					i = j;
-					j = 0;
+			for (int i = 0; i < x.length; i++) {
+				System.out.print(i + ": ");
+				for (int j = 0; j < x[i].length; j++) {
+					if (j > 9)
+						System.out.print(" ");
+					System.out.print((int) x[i][j].get(GRB.DoubleAttr.X) + " ");
 				}
-			}else {
-				j++;
+				System.out.println();
 			}
-		}		
-//		Write file			
-	    BufferedWriter writer = new BufferedWriter(new FileWriter("results/"+problem.name));
-	    writer.write(str);		     
-	    writer.close();
-	    this.model.dispose();
-	    this.env.dispose();
-		return routes;
+					
+			Solution<List<Integer>> routes = new Solution<List<Integer>>(); 
+			List<Integer> route = new ArrayList<Integer> ();
+			route.add(0);
+			int i = 0, j = 0, I = 0;
+			while (j < this.x.length) {
+				if (this.x[i][j].get(GRB.DoubleAttr.X) == 1d) {
+					route.add(j >= problem.size ? this.getAFSByVisit(j) : j);
+					if (j == 0) {
+						routes.add(route);
+						route = new ArrayList<Integer> ();
+						route.add(0);
+						i = j;
+						j = I;							
+					}else {
+						if (i == 0) {
+							I = j + 1;						
+						}
+						i = j;
+						j = 0;
+					}
+				}else {
+					j++;
+				}
+			}		
+	//		Write file			
+		    BufferedWriter writer = new BufferedWriter(new FileWriter("results/"+problem.name));
+		    writer.write(str);		     
+		    writer.close();
+		    this.model.dispose();
+		    this.env.dispose();
+		    return routes;
+		} catch(Exception e) { 
+			System.out.println("Infeasible model");
+			return null;
+		} 		
 	}
 	
 }
