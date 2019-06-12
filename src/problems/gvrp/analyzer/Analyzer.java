@@ -33,12 +33,17 @@ public class Analyzer {
 //				System.out.println("Route "+i+" has comsumed capacity out of the vehicle capacity");
 //				str += "Route "+i+" has comsumed capacity out of the vehicle capacity\n";
 			}
+			Double remainingFuel = 0d;
 			for (int j = 0; j < route.size() - 1; j++) {
 				Integer b = route.get(j), e = route.get(j + 1);
 				visitedCustomers.put(b, visitedCustomers.get(b) == null ? 0 : visitedCustomers.get(b) + 1);
 				visitedCustomers.put(e, visitedCustomers.get(e) == null ? 0 : visitedCustomers.get(b) + 1);
 //				System.out.print(b + ",");
-//				System.out.print(b + "-"+ e+ ":("+gvrp.distanceMatrix[b][e]/gvrp.vehicleConsumptionRate+")\t");
+				if (b == 0 || gvrp.rechargeStationsRefuelingTime.keySet().contains(b)) {
+					remainingFuel = gvrp.vehicleAutonomy;
+				}
+				remainingFuel -= gvrp.distanceMatrix[b][e] * gvrp.vehicleConsumptionRate;				
+//				System.out.print(b + "-"+ e+ ":("+ remainingFuel +"):"+gvrp.distanceMatrix[b][e]+"\t");
 				if (gvrp.getFuelConsumption(b, e) > gvrp.vehicleAutonomy) { 
 					System.out.println("Edge ("+ b + ", "+ e +") of route "+i+" is bigger than vehicle autonomy");
 					str += "Edge ("+ b + ", "+ e +") of route "+i+" is bigger than vehicle autonomy\n";

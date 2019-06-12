@@ -321,7 +321,8 @@ public class InstancesGenerator {
 			Integer afsId = ids.get(ids.size() - 1) + 1;
 			afss.remove(depot);
 			for (NodeData afs : afss) {
-				str += afsId + " " + afs.x + " " + afs.y  + " " + random.nextDouble() + "\n";
+//				str += afsId + " " + afs.x + " " + afs.y  + " " + random.nextDouble() + "\n";
+				str += afsId + " " + afs.x + " " + afs.y  + " " + 0.25 + "\n";
 				afsId++;
 			}
 			str += "EOF";

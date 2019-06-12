@@ -46,25 +46,48 @@ public class Gurobi_GVRP {
 		for (Route path : afsPaths) {
 			for (Integer afs : problem.rechargeStationsRefuelingTime.keySet()) {
 				if (path.get(0).equals(afs)) {
-					this.nodesShortestPathFuelConsumption.put(afs, problem.distanceMatrix[afs][path.get(1)] * problem.vehicleConsumptionRate);					
+//					this.nodesShortestPathFuelConsumption.put(afs, problem.distanceMatrix[afs][path.get(1)] * problem.vehicleConsumptionRate);					
 //					this.nodesShortestPathFuelConsumption.put(afs, problem.getFuelConsumption(path));
 					this.nodesShortestPathTimeConsumption.put(afs, problem.getTimeConsumption(path));
 					break;
 				}
 			}
 		}
+		for (Integer afs : problem.rechargeStationsRefuelingTime.keySet()) {
+			Double cost = Double.MAX_VALUE;
+			for (Integer _afs : problem.rechargeStationsRefuelingTime.keySet()) {
+				Double _cost = problem.distanceMatrix[afs][_afs];
+				if (!afs.equals(_afs) && _cost < cost) {
+					cost = _cost;
+				}
+			}
+			this.nodesShortestPathFuelConsumption.put(afs, Math.min(cost, problem.distanceMatrix[afs][0]) * problem.vehicleConsumptionRate);
+//			System.out.println(this.nodesShortestPathFuelConsumption.get(afs));
+
+		}
 //		customers
 		Routes customersPaths = Util.gvrpCustomersDijkstra(problem);
 		for (Route path : customersPaths) {
 			for (Integer customer : problem.customersDemands.keySet()) {
 				if (path.get(0).equals(customer)) {
-					this.nodesShortestPathFuelConsumption.put(customer, problem.distanceMatrix[customer][path.get(1)] * problem.vehicleConsumptionRate);
+//					this.nodesShortestPathFuelConsumption.put(customer, problem.distanceMatrix[customer][path.get(1)] * problem.vehicleConsumptionRate);
 //					this.nodesShortestPathFuelConsumption.put(customer, problem.getFuelConsumption(path));
-					this.nodesShortestPathTimeConsumption.put(customer, problem.getTimeConsumption(path));
-					
+					this.nodesShortestPathTimeConsumption.put(customer, problem.getTimeConsumption(path));					
 					break;
 				}
 			}
+		}
+		for (Integer customer : problem.customersDemands.keySet()) {
+			Double cost = Double.MAX_VALUE;
+			for (Integer afs : problem.rechargeStationsRefuelingTime.keySet()) {
+				Double _cost = problem.distanceMatrix[customer][afs];
+				if (_cost < cost) {
+					cost = _cost;
+				}
+			}			
+			this.nodesShortestPathFuelConsumption.put(customer, 
+						Math.min(cost, problem.distanceMatrix[customer][0]) * problem.vehicleConsumptionRate);
+//			System.out.println(this.nodesShortestPathFuelConsumption.get(customer));
 		}
 	}	
 
@@ -204,7 +227,7 @@ public class Gurobi_GVRP {
 		tau_0.addTerm(1d, t[0]);				
 		model.addConstr(tau_0, GRB.GREATER_EQUAL, 0, "\\tau_0 \\geq 0");
 		model.addConstr(tau_0, GRB.LESS_EQUAL, problem.vehicleOperationTime, "\\tau_0 \\leq "+problem.vehicleOperationTime);
-//		constraint (9): t_{p_{0j}} \leq \tau_{j} \leq T_{max} - t_{p_{j0}} \forall j \in V' \ {0}
+//		constraint (9): t_{p_{0j}} \leq \tau_{j} \leq T_{max} - t_{p_{j0}} - p_j \forall j \in V' \ {0}
 		for (Integer j : v_line) {
 			if (!j.equals(0)) {
 				int j_line = j >= problem.size ? this.getAFSByVisit(j) : j;
@@ -212,7 +235,7 @@ public class Gurobi_GVRP {
 				tau_j.addTerm(1d, t[j]);				
 				Double serviceTime = problem.rechargeStationsRefuelingTime.get(j_line) != null ? 
 						problem.rechargeStationsRefuelingTime.get(j_line) : problem.customersServiceTime.get(j_line);
-				Double time = this.nodesShortestPathTimeConsumption.get(j_line);
+				Double time = this.nodesShortestPathTimeConsumption.get(j_line) - serviceTime;
 //				System.out.println((time - serviceTime) + "\\leq tau_"+j + " \\leq "+ (problem.vehicleOperationTime - time - serviceTime));
 				model.addConstr(tau_j, GRB.GREATER_EQUAL, time, "\\tau_"+j+" \\geq "+time);
 //				get correspondent afs node			
@@ -234,8 +257,8 @@ public class Gurobi_GVRP {
 					right.addConstant(problem.vehicleAutonomy);
 					right.addTerm(-problem.vehicleAutonomy, x[i][j]);
 					model.addConstr(left, GRB.LESS_EQUAL, right, 
-						"y_"+j+" \\leq y_"+i+" - "+ (problem.distanceMatrix[i_line][j] * problem.vehicleConsumptionRate) + " x{"+i+" "+j+"} + "+problem.vehicleAutonomy+" (1 - x_{"+i+" "+j+"})");
-					model.addConstr(left, GRB.GREATER_EQUAL, 0, 
+					"y_"+j+" \\leq y_"+i+" - "+ (problem.distanceMatrix[i_line][j] * problem.vehicleConsumptionRate) + " x{"+i+" "+j+"} + "+problem.vehicleAutonomy+" (1 - x_{"+i+" "+j+"})");
+					model.addConstr(left, GRB.GREATER_EQUAL, this.nodesShortestPathFuelConsumption.get(j), 
 							"y_"+j+" \\geq 0");
 				}
 			}
@@ -249,12 +272,12 @@ public class Gurobi_GVRP {
 			}
 		}
 //		constraint (12): y_j \geq d_{p(j, 0)} \forall j \in I
-		for (Integer j : problem.customersDemands.keySet()) {			
-			expr = new GRBLinExpr();
-			expr.addTerm(1, y[j]);
-			model.addConstr(expr, GRB.GREATER_EQUAL, this.nodesShortestPathFuelConsumption.get(j),
-				"y_"+j+" \\geq "+this.nodesShortestPathFuelConsumption.get(j));			
-		}	
+//		for (Integer j : problem.customersDemands.keySet()) {			
+//			expr = new GRBLinExpr();
+//			expr.addTerm(1, y[j]);
+//			model.addConstr(expr, GRB.GREATER_EQUAL, this.nodesShortestPathFuelConsumption.get(j),
+//				"y_"+j+" \\geq "+this.nodesShortestPathFuelConsumption.get(j));
+//		}	
 //		constraint (13): \sum_{i \in V'} x_{ij} \geq \sum_{i \in V'} x_{i n(j)} \forall j \in F \cup \phi		
 //		for (Integer j : problem.rechargeStationsRefuelingTime.keySet()) {
 //			GRBLinExpr left = new GRBLinExpr();
@@ -324,9 +347,30 @@ public class Gurobi_GVRP {
 					expr.addTerm(1, x[i][j]);
 					model.addConstr(expr, GRB.EQUAL, 0,
 						"x_{"+i+" "+j+"} = 0 ");
+					expr = new GRBLinExpr();
+					expr.addTerm(1, x[j][i]);
+					model.addConstr(expr, GRB.EQUAL, 0,
+						"x_{"+j+" "+i+"} = 0 ");
 				}
 			}			
 		}
+//		for (Integer i : problem.customersDemands.keySet()) {
+//			for (Integer j : v_line) {
+//				if (j > problem.customersSize) {
+//					int j_line = j >= problem.size ? this.getAFSByVisit(j) : j;
+//					if (problem.distanceMatrix[i][j_line] * problem.vehicleConsumptionRate > problem.vehicleAutonomy/2) {
+//						expr = new GRBLinExpr();
+//						expr.addTerm(1, x[i][j]);
+//						model.addConstr(expr, GRB.EQUAL, 0,
+//							"x_{"+i+" "+j+"} = 0 ");
+//						expr = new GRBLinExpr();
+//						expr.addTerm(1, x[j][i]);
+//						model.addConstr(expr, GRB.EQUAL, 0,
+//							"x_{"+j+" "+i+"} = 0 ");
+//					}
+//				}
+//			}			
+//		}
 //		setup
 		model.setObjective(obj);
 		model.update();

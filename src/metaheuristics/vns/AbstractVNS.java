@@ -113,6 +113,7 @@ public abstract class AbstractVNS<E extends Evaluator<T, S>, S extends Solution<
 		bestSol = constructiveHeuristic();
 		S localOptimalSolution = bestSol;
 		this.ObjFunction.evaluate(localOptimalSolution);
+//		System.out.println("Initial solution build");
 		long endTime = System.currentTimeMillis() + this.maxDurationInMilliseconds;
 //		set initial parameters							
 		for (int i = 0, j = 1, c = 0; 
@@ -121,11 +122,15 @@ public abstract class AbstractVNS<E extends Evaluator<T, S>, S extends Solution<
 			System.currentTimeMillis() <= endTime
 			; c++, j++) {
 //			random solution
+//			System.out.println("get random at "+i);
 			S randomSolution = this.neighborhoodStructures.get(i).randomSolution(this.ObjFunction, localOptimalSolution);
 			this.ObjFunction.evaluate(randomSolution);
+//			System.out.println("random generated");
 //			local opt solution
+//			System.out.println("get local opt");
 			localOptimalSolution = this.neighborhoodStructures.get(i).localOptimalSolution(this.ObjFunction, randomSolution);
 			this.ObjFunction.evaluate(localOptimalSolution);
+//			System.out.println("local opt achieved");
 //			check cost
 			if (localOptimalSolution.cost > bestSol.cost) {				
 				i = 0;

@@ -1,14 +1,14 @@
 package problems.gvrp.local_searchs;
 
 import metaheuristics.vns.LocalSearch;
-import problems.gvrp.GVRP;
+import problems.gvrp.GVRP_Inverse;
 import problems.gvrp.Route;
 import problems.gvrp.Routes;
 
-public class InterTourVertexExchange extends LocalSearch<GVRP, Routes>{
+public class InterTourVertexExchange extends LocalSearch<GVRP_Inverse, Routes>{
 
 	@Override
-	public Routes localOptimalSolution(GVRP eval, Routes solution) {
+	public Routes localOptimalSolution(GVRP_Inverse eval, Routes solution) {
 		Routes routes = (Routes) solution.clone();
 		for (int i = 0; i < routes.size(); i++){
 			for (int j = 0; j < routes.size(); j++){
@@ -49,34 +49,36 @@ public class InterTourVertexExchange extends LocalSearch<GVRP, Routes>{
 	}
 
 	@Override
-	public Routes randomSolution(GVRP eval, Routes solution) {
+	public Routes randomSolution(GVRP_Inverse eval, Routes solution) {
 		Routes routes = (Routes) solution.clone();
-		// get routes
-		int firstRouteIndex = eval.random.nextInt(solution.size());
-		int secondRouteIndex = eval.random.nextInt(solution.size());
-		while (secondRouteIndex == firstRouteIndex)
-			secondRouteIndex = eval.random.nextInt(solution.size());
-		Route routeI = routes.get(firstRouteIndex);
-		Route routeJ = routes.get(secondRouteIndex);
-		Route firstRoute = (Route) routeI.clone();
-		Route secondRoute = (Route) routeJ.clone();
-		// get nodes		
-		int firstRouteNode = 1 + eval.random.nextInt(routeI.size() - 2);
-		int secondRouteNode = 1 + eval.random.nextInt(routeJ.size() - 2);
-		// exchange
-		firstRoute.add(firstRouteNode, secondRoute.remove(secondRouteNode));
-		secondRoute.add(secondRouteNode, firstRoute.remove(firstRouteNode + 1));
-		if (eval.getFuelConsumption(firstRoute) <= eval.vehicleAutonomy 
-			&& eval.getFuelConsumption(secondRoute) <= eval.vehicleAutonomy
-			&& eval.getTimeConsumption(firstRoute) <= eval.vehicleOperationTime
-			&& eval.getTimeConsumption(secondRoute) <= eval.vehicleOperationTime){
-			routes.set(firstRouteIndex, firstRoute);
-			routes.set(secondRouteIndex, secondRoute);
-		}
-		for (int i = 0; i < routes.size(); i++){
-			if (routes.get(i).size() == 0){
-				routes.remove(i);				
-				i--;
+		if (routes.size() > 1) {
+			// get routes
+			int firstRouteIndex = eval.random.nextInt(solution.size());
+			int secondRouteIndex = eval.random.nextInt(solution.size());
+			while (secondRouteIndex == firstRouteIndex)
+				secondRouteIndex = eval.random.nextInt(solution.size());
+			Route routeI = routes.get(firstRouteIndex);
+			Route routeJ = routes.get(secondRouteIndex);
+			Route firstRoute = (Route) routeI.clone();
+			Route secondRoute = (Route) routeJ.clone();
+			// get nodes		
+			int firstRouteNode = 1 + eval.random.nextInt(routeI.size() - 2);
+			int secondRouteNode = 1 + eval.random.nextInt(routeJ.size() - 2);
+			// exchange
+			firstRoute.add(firstRouteNode, secondRoute.remove(secondRouteNode));
+			secondRoute.add(secondRouteNode, firstRoute.remove(firstRouteNode + 1));
+			if (eval.getFuelConsumption(firstRoute) <= eval.vehicleAutonomy 
+				&& eval.getFuelConsumption(secondRoute) <= eval.vehicleAutonomy
+				&& eval.getTimeConsumption(firstRoute) <= eval.vehicleOperationTime
+				&& eval.getTimeConsumption(secondRoute) <= eval.vehicleOperationTime){
+				routes.set(firstRouteIndex, firstRoute);
+				routes.set(secondRouteIndex, secondRoute);
+			}
+			for (int i = 0; i < routes.size(); i++){
+				if (routes.get(i).size() == 0){
+					routes.remove(i);				
+					i--;
+				}
 			}
 		}
 		return routes;

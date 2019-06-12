@@ -1,55 +1,25 @@
 package problems.qbf.solvers;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import metaheuristics.vns.AbstractVNS;
+import metaheuristics.vns.LocalSearch;
 import problems.gvrp.GVRP_Inverse;
-import problems.gvrp.constructive_heuristic.NearestNeighborhood;
-import solutions.Solution;
+import problems.gvrp.Route;
+import problems.gvrp.Routes;
+import problems.gvrp.constructive_heuristic.ShortestPaths;
 
-public class VNS_GVRP extends AbstractVNS<List<Integer>> {
-	
-	/**
-	 * Constructor for the GRASP_QBF class. An inverse QBF objective function is
-	 * passed as argument for the superclass constructor.
-	 * 
-	 * @param alpha
-	 *            The GRASP greediness-randomness parameter (within the range
-	 *            [0,1])
-	 * @param iterations
-	 *            The number of iterations which the GRASP will be executed.
-	 * @param filename
-	 *            Name of the file for which the objective function parameters
-	 *            should be read.
-	 * @throws IOException
-	 *             necessary for I/O operations.
-	 */
-	public VNS_GVRP(String filename, Integer iterations, Integer maxDurationInMilliseconds) throws IOException {
-		super(new GVRP_Inverse(filename), iterations, maxDurationInMilliseconds);
+public class VNS_GVRP extends AbstractVNS<GVRP_Inverse, Routes, Route> {	
+
+	public VNS_GVRP(GVRP_Inverse objFunction, Integer iterations, Integer maxDurationInMilliseconds,
+			List<LocalSearch<GVRP_Inverse, Routes>> localSearchs, VNS_TYPE vns_type) {
+		super(objFunction, iterations, maxDurationInMilliseconds, localSearchs, vns_type);
 	}
 
 	@Override
-	public Solution<List<Integer>> localSearch(Solution<List<Integer>> solution) {
-		// TODO Auto-generated method stub
-		return solution;
+	public Routes constructiveHeuristic() {		
+		return new ShortestPaths().construct(super.ObjFunction);
 	}
 
-
-	@Override
-	public Solution<List<Integer>> constructiveHeuristic() {
-		Solution<List<Integer>> sol = new Solution<List<Integer>>();
-		GVRP_Inverse GVRP_evaluator = (GVRP_Inverse) this.ObjFunction;		
-		return NearestNeighborhood.construct(GVRP_evaluator);
-	}
-
-
-	@Override
-	public Solution<List<Integer>> createEmptySol() {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 }

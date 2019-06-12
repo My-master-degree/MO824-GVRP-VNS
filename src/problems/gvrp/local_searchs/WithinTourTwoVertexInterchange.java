@@ -4,14 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import metaheuristics.vns.LocalSearch;
-import problems.gvrp.GVRP;
+import problems.gvrp.GVRP_Inverse;
 import problems.gvrp.Route;
 import problems.gvrp.Routes;
 
-public class WithinTourTwoVertexInterchange extends LocalSearch<GVRP, Routes>{
+public class WithinTourTwoVertexInterchange extends LocalSearch<GVRP_Inverse, Routes>{
 
 	@Override
-	public Routes localOptimalSolution(GVRP eval, Routes solution) {
+	public Routes localOptimalSolution(GVRP_Inverse eval, Routes solution) {
 		Routes routes = (Routes) solution.clone();
 		for (int i = 0; i < routes.size(); i++){
 			Route route = routes.get(i);
@@ -48,7 +48,7 @@ public class WithinTourTwoVertexInterchange extends LocalSearch<GVRP, Routes>{
 							}
 						}
 //						third
-						routeCopy.add(k, routeCopy.remove(l));						
+						routeCopy.set(k, routeCopy.set(l, routeCopy.get(k)));						
 						if (eval.getFuelConsumption(routeCopy) <= eval.vehicleAutonomy 
 							&& eval.getTimeConsumption(routeCopy) <= eval.vehicleOperationTime
 							&& eval.getDistance(routeCopy) < eval.getDistance(route)){
@@ -65,7 +65,7 @@ public class WithinTourTwoVertexInterchange extends LocalSearch<GVRP, Routes>{
 	}
 
 	@Override
-	public Routes randomSolution(GVRP eval, Routes solution) {
+	public Routes randomSolution(GVRP_Inverse eval, Routes solution) {
 		List<Integer> routesBiggerThanThree = new ArrayList<Integer>(); 
 		for (int i = 0; i < solution.size(); i++){
 			if (solution.get(i).size() > 3){
@@ -77,14 +77,15 @@ public class WithinTourTwoVertexInterchange extends LocalSearch<GVRP, Routes>{
 		}
 		Routes routes = (Routes) solution.clone();
 		// get routes
-		int routeIndex = eval.random.nextInt(routesBiggerThanThree.size());
-		Route route = routes.get(routesBiggerThanThree.get(routeIndex));
+		int routesBiggerThanThreeIndex = eval.random.nextInt(routesBiggerThanThree.size());
+		int routeIndex = routesBiggerThanThree.get(routesBiggerThanThreeIndex);
+		Route route = routes.get(routeIndex);
 		Route routeCopy = (Route) route.clone();		
 		// get nodes
-		int firstNode = 1 + eval.random.nextInt(route.size() - 1);
-		int secondNode = 1 + eval.random.nextInt(route.size() - 1);
+		int firstNode = 1 + eval.random.nextInt(route.size() - 2);
+		int secondNode = 1 + eval.random.nextInt(route.size() - 2);
 		while (firstNode == secondNode) {
-			secondNode = 1 + eval.random.nextInt(route.size() - 1);
+			secondNode = 1 + eval.random.nextInt(route.size() - 2);
 		}
 		// exchange
 		routeCopy.set(firstNode, routeCopy.set(secondNode, routeCopy.get(firstNode)));

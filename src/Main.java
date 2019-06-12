@@ -2,6 +2,7 @@
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -12,20 +13,28 @@ import gurobi.GRB;
 import gurobi.GRBEnv;
 import gurobi.GRBException;
 import gurobi.GRBModel;
+import metaheuristics.vns.AbstractVNS;
+import metaheuristics.vns.LocalSearch;
 import problems.gvrp.GVRP_Inverse;
 import problems.gvrp.Route;
 import problems.gvrp.Routes;
 import problems.gvrp.analyzer.Analyzer;
 import problems.gvrp.constructive_heuristic.ShortestPaths;
 import problems.gvrp.instances.InstancesGenerator;
+import problems.gvrp.local_searchs.FSDrop;
 import problems.gvrp.local_searchs.InterTourVertexExchange;
+import problems.gvrp.local_searchs.MergeRoutes;
 import problems.gvrp.local_searchs.WithinTourTwoVertexInterchange;
 import problems.qbf.solvers.Gurobi_GVRP;
+import problems.qbf.solvers.VNS_GVRP;
 import solutions.Solution;
 
 public class Main {
 	
-	private static final double TIME_LIMIT_GUROBI = 600;
+	private static final Integer VNS_ITERATIONS_LIMIT = 1000000;
+	private static final Integer VNS_TIME_MILLISECONDS_LIMIT = 600000;
+	
+	private static final Integer TIME_LIMIT_GUROBI = 600;
 
 	public static void main(String[] args) throws IOException {
 //		instancesGenerator();
@@ -36,7 +45,7 @@ public class Main {
 			"A-n06-k2.vrp.gvrp",
 			"A-n07-k3.vrp.gvrp",
 			"A-n32-k5.vrp.gvrp",
-			"A-n33-k5.vrp.gvrp",
+//			"A-n33-k5.vrp.gvrp", 
 			"A-n33-k6.vrp.gvrp",
 			"A-n34-k5.vrp.gvrp",
 			"A-n36-k5.vrp.gvrp",
@@ -61,11 +70,12 @@ public class Main {
 			"A-n64-k9.vrp.gvrp",
 			"A-n65-k9.vrp.gvrp",
 			"A-n69-k9.vrp.gvrp",
-			"A-n80-k10.vrp.gvrp",
+//			"A-n80-k10.vrp.gvrp",
 		};
-//		runGurobi(gvrpInstances);		
+		runGurobi(gvrpInstances);		
 //		runShortestPaths(gvrpInstances);
-		runVNS(gvrpInstances);
+//		runLocalSearchs(gvrpInstances);
+//		runVNS(gvrpInstances, AbstractVNS.VNS_TYPE.INTENSIFICATION);
 	}
 	
 	public static void readErdoganInstances() throws IOException {
@@ -216,7 +226,7 @@ public class Main {
 						str += "\n";
 						System.out.println();
 					}
-					Analyzer.analyze(sol, gurobi.problem);
+					str += "\n"+Analyzer.analyze(sol, gurobi.problem);
 					writer.write(str);		     
 				    writer.close();
 				}
@@ -239,10 +249,13 @@ public class Main {
 				gvrp = new GVRP_Inverse("CVRP Instances/"+instances[i]);
 				Routes sol = sp.construct(gvrp);
 				for (Route list : sol) {
-					for (Integer integer : list) {
-						System.out.print(integer + ",");
-					}
-					System.out.println(": "+gvrp.getFuelConsumption(list) + " " + gvrp.getTimeConsumption(list));
+					if (list.size() > 5) {
+						System.out.println(list.size());
+					}					
+//					for (Integer integer : list) {
+//						System.out.print(integer + ",");
+//					}
+//					System.out.println(": "+gvrp.getFuelConsumption(list) + " " + gvrp.getTimeConsumption(list));
 				}				
 				Analyzer.analyze(sol, gvrp);
 			} catch (IOException e1) {
@@ -253,17 +266,20 @@ public class Main {
 		}		
 	}
 	
-	public static void runVNS(String[] instances) {		
+	public static void runLocalSearchs(String[] instances) {		
 //		Linear version
 		ShortestPaths sp = new ShortestPaths();
 		InterTourVertexExchange itve = new InterTourVertexExchange();
-		WithinTourTwoVertexInterchange wttve = new WithinTourTwoVertexInterchange(); 
+		WithinTourTwoVertexInterchange wttve = new WithinTourTwoVertexInterchange();
+		MergeRoutes mr = new MergeRoutes();
+		FSDrop fsd = new FSDrop(); 
 		for (int i = 0; i < instances.length; i++) {
 			System.out.println(instances[i]);
 			// instance name			
 			GVRP_Inverse gvrp;
 			try {
 				gvrp = new GVRP_Inverse("CVRP Instances/"+instances[i]);
+//				ShortestPaths
 				Routes sol = sp.construct(gvrp);
 				gvrp.evaluate(sol);
 				Analyzer.analyze(sol, gvrp);
@@ -273,15 +289,55 @@ public class Main {
 //						System.out.print(integer + ",");
 //					}
 //					System.out.println(": "+gvrp.getFuelConsumption(list) + " " + gvrp.getTimeConsumption(list));
-//				}				
-				sol = itve.localOptimalSolution(gvrp, sol);
+//				}
+//				InterTourVertexExchange
+//				sol = itve.localOptimalSolution(gvrp, sol);
+//				gvrp.evaluate(sol);
+//				Analyzer.analyze(sol, gvrp);
+//				System.out.println(sol.cost);		
+//				WithinTourTwoVertexInterchange
+//				sol = wttve.localOptimalSolution(gvrp, sol);				
+//				gvrp.evaluate(sol);
+//				Analyzer.analyze(sol, gvrp);
+//				System.out.println(sol.cost);		
+//				MergeRoutes
+				sol = mr.localOptimalSolution(gvrp, sol);
 				gvrp.evaluate(sol);
 				Analyzer.analyze(sol, gvrp);
-				System.out.println(sol.cost);								
-				sol = wttve.localOptimalSolution(gvrp, sol);				
+				System.out.println(sol.cost);
+//				FSDrop
+				sol = fsd.localOptimalSolution(gvrp, sol);
 				gvrp.evaluate(sol);
 				Analyzer.analyze(sol, gvrp);
-				System.out.println(sol.cost);				
+				System.out.println(sol.cost);	
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			} 						
+//			break;
+		}		
+	}
+	
+	public static void runVNS(String[] instances, AbstractVNS.VNS_TYPE vnsType) {		
+//		Linear version
+		for (int i = 0; i < instances.length; i++) {
+			System.out.println(instances[i]);
+			// instance name						
+			try {
+				List<LocalSearch<GVRP_Inverse, Routes>> localSearchs = new ArrayList<LocalSearch<GVRP_Inverse, Routes>>(); 
+				localSearchs.add(new InterTourVertexExchange()); 
+				localSearchs.add(new WithinTourTwoVertexInterchange()); 
+				localSearchs.add(new MergeRoutes()); 
+				localSearchs.add(new FSDrop());
+				GVRP_Inverse gvrp = new GVRP_Inverse("CVRP Instances/"+instances[i]);
+				Routes sol = new VNS_GVRP(
+						gvrp, 
+						Main.VNS_ITERATIONS_LIMIT, 
+						Main.VNS_TIME_MILLISECONDS_LIMIT, 
+						localSearchs, 
+						vnsType).solve();						
+				gvrp.evaluate(sol);
+				Analyzer.analyze(sol, gvrp);
+				System.out.println(sol.cost);	
 			} catch (IOException e1) {
 				e1.printStackTrace();
 			} 						
