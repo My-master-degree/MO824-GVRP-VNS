@@ -19,6 +19,8 @@ import gurobi.GRBLinExpr;
 import gurobi.GRBModel;
 import gurobi.GRBVar;
 import problems.gvrp.GVRP;
+import problems.gvrp.Route;
+import problems.gvrp.Routes;
 import problems.gvrp.constructive_heuristic.ShortestPaths;
 import problems.gvrp.instances.Util;
 import solutions.Solution;
@@ -40,8 +42,8 @@ public class Gurobi_GVRP {
 		this.nodesShortestPathTimeConsumption = new HashMap<Integer, Double> ();
 		this.TIME_LIMIT_GUROBI = 120;
 //		afss
-		List<Stack<Integer>> afsPaths = Util.gvrpFromDepotToAFSDijkstra(problem);
-		for (Stack<Integer> path : afsPaths) {
+		Routes afsPaths = Util.gvrpFromDepotToAFSDijkstra(problem);
+		for (Route path : afsPaths) {
 			for (Integer afs : problem.rechargeStationsRefuelingTime.keySet()) {
 				if (path.get(0).equals(afs)) {
 					this.nodesShortestPathFuelConsumption.put(afs, problem.distanceMatrix[afs][path.get(1)] * problem.vehicleConsumptionRate);					
@@ -52,8 +54,8 @@ public class Gurobi_GVRP {
 			}
 		}
 //		customers
-		List<Stack<Integer>> customersPaths = Util.gvrpCustomersDijkstra(problem);
-		for (Stack<Integer> path : customersPaths) {
+		Routes customersPaths = Util.gvrpCustomersDijkstra(problem);
+		for (Route path : customersPaths) {
 			for (Integer customer : problem.customersDemands.keySet()) {
 				if (path.get(0).equals(customer)) {
 					this.nodesShortestPathFuelConsumption.put(customer, problem.distanceMatrix[customer][path.get(1)] * problem.vehicleConsumptionRate);
@@ -332,7 +334,7 @@ public class Gurobi_GVRP {
 		model.set(GRB.IntAttr.ModelSense, GRB.MINIMIZE);
 	}
 
-	public Solution<List<Integer>> run() throws GRBException, IOException{				
+	public Routes run() throws GRBException, IOException{				
 		this.env = new GRBEnv();
 		this.model = new GRBModel(this.env);
 		// execution time in seconds 
@@ -378,8 +380,8 @@ public class Gurobi_GVRP {
 				System.out.println();
 			}
 					
-			Solution<List<Integer>> routes = new Solution<List<Integer>>(); 
-			List<Integer> route = new ArrayList<Integer> ();
+			Routes routes = new Routes(); 
+			Route route = new Route ();
 			route.add(0);
 			int i = 0, j = 0, I = 0;
 			while (j < this.x.length) {
@@ -387,7 +389,7 @@ public class Gurobi_GVRP {
 					route.add(j >= problem.size ? this.getAFSByVisit(j) : j);
 					if (j == 0) {
 						routes.add(route);
-						route = new ArrayList<Integer> ();
+						route = new Route ();
 						route.add(0);
 						i = j;
 						j = I;							
@@ -410,7 +412,7 @@ public class Gurobi_GVRP {
 		    this.env.dispose();
 		    return routes;
 		} catch(Exception e) { 
-			System.out.println("Infeasible model");
+			System.out.println("Infeasible model "+e.getMessage());
 			return null;
 		} 		
 	}

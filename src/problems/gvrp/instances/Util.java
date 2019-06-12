@@ -13,6 +13,8 @@ import java.util.Set;
 import java.util.Stack;
 
 import problems.gvrp.GVRP;
+import problems.gvrp.Route;
+import problems.gvrp.Routes;
 import solutions.Solution;
 
 public class Util {
@@ -363,8 +365,8 @@ public class Util {
 		return true;
 	}
 
-	public static List<Stack<Integer>> gvrpCustomersDijkstra(GVRP gvrp){
-		Solution<Stack<Integer>> paths = new Solution<Stack<Integer>>(); 
+	public static Routes gvrpCustomersDijkstra(GVRP gvrp){
+		Routes paths = new Routes(); 
 		for (Integer customer : gvrp.customersDemands.keySet()) {					
 	//		build base graph
 			Map<Integer, NodeData> nodes = Util.buildGraphWithAFSDepotAndCustomer(gvrp, customer);						
@@ -436,13 +438,17 @@ public class Util {
 //				System.out.println();
 			}
 //			create route
-			paths.add(s);
+			Route route = new Route();
+			for (Integer item : s) {
+				route.add(item);
+			}
+			paths.add(route);
 		}
 		return paths;
 	}
 
-	public static List<Stack<Integer>> gvrpFromDepotToAFSDijkstra(GVRP gvrp){
-		Solution<Stack<Integer>> paths = new Solution<Stack<Integer>>(); 	
+	public static Routes gvrpFromDepotToAFSDijkstra(GVRP gvrp){
+		Routes paths = new Routes(); 	
 		Map<Integer, NodeData> graph = Util.buildGVRPGraphOnlyWithDepotAndAFSs(gvrp);
 //		check if is connected
 		if (!Util.isAConnectedGraph(graph.values())) {
@@ -513,7 +519,11 @@ public class Util {
 	//				System.out.println();
 			}
 	//			create route
-			paths.add(s);		
+			Route route = new Route();
+			for (Integer item : s) {
+				route.add(item);
+			}
+			paths.add(route);
 		}
 		return paths;
 	}

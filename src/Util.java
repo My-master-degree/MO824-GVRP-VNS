@@ -30,10 +30,10 @@ public class Util {
 		
 	}
 	
-	public static void printGVRPSolutionDistance(Solution<List<Integer>> sol, GVRP gvrp) {
+	public static void printGVRPSolutionDistance(Routes sol, GVRP gvrp) {
 		double cost = 0d;
 		for (int i = 0; i < sol.size(); i++) {
-			List<Integer> route = sol.get(i);
+			Route route = sol.get(i);
 			cost += gvrp.getDistance(route);
 		}
 //		System.out.println("Distance: "+cost);

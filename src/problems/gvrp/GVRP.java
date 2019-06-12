@@ -3,6 +3,7 @@ package problems.gvrp;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import problems.Evaluator;
 import problems.gvrp.instances.MyInstanceReader;
@@ -77,6 +78,8 @@ public class GVRP implements Evaluator<Route, Routes> {
 
 	public String name;
 
+	public Random random;
+
 	/**
 	 * The constructor for Green-VRP class. The filename of the
 	 * input for setting matrix of distance, customers and fuel stations data. 	
@@ -88,6 +91,7 @@ public class GVRP implements Evaluator<Route, Routes> {
 	 */
 	public GVRP(String filename) throws IOException {
 		readInput(filename);
+		this.random = new Random(System.currentTimeMillis());
 	}	
 	
 //	public Double getDistance(int... indexes) {

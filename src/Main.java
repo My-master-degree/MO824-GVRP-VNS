@@ -13,10 +13,13 @@ import gurobi.GRBEnv;
 import gurobi.GRBException;
 import gurobi.GRBModel;
 import problems.gvrp.GVRP_Inverse;
+import problems.gvrp.Route;
+import problems.gvrp.Routes;
 import problems.gvrp.analyzer.Analyzer;
-import problems.gvrp.constructive_heuristic.MCWS;
 import problems.gvrp.constructive_heuristic.ShortestPaths;
 import problems.gvrp.instances.InstancesGenerator;
+import problems.gvrp.local_searchs.InterTourVertexExchange;
+import problems.gvrp.local_searchs.WithinTourTwoVertexInterchange;
 import problems.qbf.solvers.Gurobi_GVRP;
 import solutions.Solution;
 
@@ -27,6 +30,7 @@ public class Main {
 	public static void main(String[] args) throws IOException {
 //		instancesGenerator();
 //		System.exit(0);
+//		System.setProperty("java.library.path", "/home/matheusdiogenesandrade/gurobi811/linux64/lib/libGurobiJni81.so");
 		String[] gvrpInstances = new String[] {
 			"A-n05-k2.vrp.gvrp",				
 			"A-n06-k2.vrp.gvrp",
@@ -59,8 +63,9 @@ public class Main {
 			"A-n69-k9.vrp.gvrp",
 			"A-n80-k10.vrp.gvrp",
 		};
-		runGurobi(gvrpInstances);		
+//		runGurobi(gvrpInstances);		
 //		runShortestPaths(gvrpInstances);
+		runVNS(gvrpInstances);
 	}
 	
 	public static void readErdoganInstances() throws IOException {
@@ -135,10 +140,10 @@ public class Main {
 			System.out.print(instances[i]+": ");
 			GVRP_Inverse gvrp = new GVRP_Inverse("instances/"+instances[i]);
 			
-			Solution<List<Integer>> sol = MCWS.construct(gvrp);
-			System.out.println(gvrp.toString());
-			Util.printGVRPSolutionDistance(sol, gvrp);
-			Analyzer.analyze(sol, gvrp);		
+//			Routes sol = MCWS.construct(gvrp);
+//			System.out.println(gvrp.toString());
+//			Util.printGVRPSolutionDistance(sol, gvrp);
+//			Analyzer.analyze(sol, gvrp);		
 			break;		
 		}		
 	}
@@ -198,12 +203,12 @@ public class Main {
 			try {
 				gurobi = new Gurobi_GVRP("CVRP Instances/"+instances[i]);
 				gurobi.TIME_LIMIT_GUROBI = TIME_LIMIT_GUROBI; 
-				Solution<List<Integer>> sol = gurobi.run();
+				Routes sol = gurobi.run();
 				if (sol != null) {
 	//				write routes
 					BufferedWriter writer = new BufferedWriter(new FileWriter("results/"+instances[i]));
 					String str = "";
-					for (List<Integer> list : sol) {
+					for (Route list : sol) {
 						for (Integer integer : list) {
 							System.out.print(integer + ",");
 							str += integer + ",";							
@@ -232,8 +237,8 @@ public class Main {
 			GVRP_Inverse gvrp;
 			try {
 				gvrp = new GVRP_Inverse("CVRP Instances/"+instances[i]);
-				Solution<List<Integer>> sol = sp.construct(gvrp);
-				for (List<Integer> list : sol) {
+				Routes sol = sp.construct(gvrp);
+				for (Route list : sol) {
 					for (Integer integer : list) {
 						System.out.print(integer + ",");
 					}
@@ -242,6 +247,42 @@ public class Main {
 				Analyzer.analyze(sol, gvrp);
 			} catch (IOException e1) {
 				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			} 						
+//			break;
+		}		
+	}
+	
+	public static void runVNS(String[] instances) {		
+//		Linear version
+		ShortestPaths sp = new ShortestPaths();
+		InterTourVertexExchange itve = new InterTourVertexExchange();
+		WithinTourTwoVertexInterchange wttve = new WithinTourTwoVertexInterchange(); 
+		for (int i = 0; i < instances.length; i++) {
+			System.out.println(instances[i]);
+			// instance name			
+			GVRP_Inverse gvrp;
+			try {
+				gvrp = new GVRP_Inverse("CVRP Instances/"+instances[i]);
+				Routes sol = sp.construct(gvrp);
+				gvrp.evaluate(sol);
+				Analyzer.analyze(sol, gvrp);
+				System.out.println(sol.cost);				
+//				for (Route list : sol) {
+//					for (Integer integer : list) {
+//						System.out.print(integer + ",");
+//					}
+//					System.out.println(": "+gvrp.getFuelConsumption(list) + " " + gvrp.getTimeConsumption(list));
+//				}				
+				sol = itve.localOptimalSolution(gvrp, sol);
+				gvrp.evaluate(sol);
+				Analyzer.analyze(sol, gvrp);
+				System.out.println(sol.cost);								
+				sol = wttve.localOptimalSolution(gvrp, sol);				
+				gvrp.evaluate(sol);
+				Analyzer.analyze(sol, gvrp);
+				System.out.println(sol.cost);				
+			} catch (IOException e1) {
 				e1.printStackTrace();
 			} 						
 //			break;

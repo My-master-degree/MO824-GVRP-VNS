@@ -30,8 +30,8 @@ public class Analyzer {
 				str += "Route "+i+" has fuel consumption out of the vehicle autonomy\n";
 			}
 			if (gvrp.getCapacityConsumption(route) > gvrp.vehicleCapacity) {
-				System.out.println("Route "+i+" has comsumed capacity out of the vehicle capacity");
-				str += "Route "+i+" has comsumed capacity out of the vehicle capacity\n";
+//				System.out.println("Route "+i+" has comsumed capacity out of the vehicle capacity");
+//				str += "Route "+i+" has comsumed capacity out of the vehicle capacity\n";
 			}
 			for (int j = 0; j < route.size() - 1; j++) {
 				Integer b = route.get(j), e = route.get(j + 1);
