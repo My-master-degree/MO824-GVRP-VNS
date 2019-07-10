@@ -113,7 +113,7 @@ public class Util {
 		NodeData depotNode = new NodeData(0, gvrp.nodesCoordinates.get(0)[0], gvrp.nodesCoordinates.get(0)[1]);
 		nodes.put(0, depotNode);	
 		nodes.put(customer, customerNode);
-		if (gvrp.distanceMatrix[0][customer] <= gvrp.vehicleAutonomy / 2) {
+		if (gvrp.distanceMatrix[0][customer] * gvrp.vehicleConsumptionRate <= gvrp.vehicleAutonomy / 2) {
 			customerNode.neighborhoods.add(depotNode);
 			depotNode.neighborhoods.add(customerNode);
 		}
@@ -121,11 +121,11 @@ public class Util {
 		for (Integer afs : gvrp.rechargeStationsRefuelingTime.keySet()) {	
 			NodeData afsNode = new NodeData(afs, gvrp.nodesCoordinates.get(afs)[0], gvrp.nodesCoordinates.get(afs)[1]);
 			nodes.put(afs, afsNode);
-			if (gvrp.distanceMatrix[customer][afs] <= gvrp.vehicleAutonomy / 2) {
+			if (gvrp.distanceMatrix[customer][afs]  * gvrp.vehicleConsumptionRate <= gvrp.vehicleAutonomy / 2) {
 				customerNode.neighborhoods.add(afsNode);
 				afsNode.neighborhoods.add(customerNode);
 			}
-			if (gvrp.distanceMatrix[0][afs] <= gvrp.vehicleAutonomy) {
+			if (gvrp.distanceMatrix[0][afs]  * gvrp.vehicleConsumptionRate <= gvrp.vehicleAutonomy) {
 				afsNode.neighborhoods.add(depotNode);
 				depotNode.neighborhoods.add(afsNode);
 			}

@@ -39,9 +39,12 @@ public class Analyzer {
 				visitedCustomers.put(b, visitedCustomers.get(b) == null ? 0 : visitedCustomers.get(b) + 1);
 				visitedCustomers.put(e, visitedCustomers.get(e) == null ? 0 : visitedCustomers.get(b) + 1);
 //				System.out.print(b + ",");
-				if (b == 0 || gvrp.rechargeStationsRefuelingTime.keySet().contains(b)) {
+				if (b.equals(0)  || gvrp.rechargeStationsRefuelingTime.keySet().contains(b)) {
 					remainingFuel = gvrp.vehicleAutonomy;
 				}
+				
+//				System.out.println("From "+b + " to "+ e +": "+gvrp.distanceMatrix[b][e]);
+				
 				remainingFuel -= gvrp.distanceMatrix[b][e] * gvrp.vehicleConsumptionRate;				
 //				System.out.print(b + "-"+ e+ ":("+ remainingFuel +"):"+gvrp.distanceMatrix[b][e]+"\t");
 				if (gvrp.getFuelConsumption(b, e) > gvrp.vehicleAutonomy) { 

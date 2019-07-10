@@ -23,7 +23,7 @@ public class ShortestPaths {
 		Routes routes = new Routes(); 
 		Routes paths = Util.gvrpCustomersDijkstra(gvrp);
 //		get customers paths
-		for (Route path : paths) {					
+		for (Route path : paths) {	
 //			create route
 			Route route = new Route ();			
 			for (int i = path.size() - 1; i >= 0; i--) {

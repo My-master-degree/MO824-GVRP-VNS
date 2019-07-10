@@ -11,8 +11,8 @@ import java.util.List;
 
 import problems.gvrp.GVRP;
 
-public class EMHInstanceReader {
-	public static void read(String path, GVRP gvrp) {
+public class EMHInstanceReader implements GVRPInstanceReader{
+	public void read(String path, GVRP gvrp) {
 		List<Double[]> customersCoordinates = new ArrayList<Double[]>(),
 				afssCoordinates = new ArrayList<Double[]>();
 		Double[] depotCoordinates = new Double[2]; 
@@ -39,21 +39,41 @@ public class EMHInstanceReader {
 			gvrp.customersSize = customersCoordinates.size();
 			gvrp.rechargeStationsSize = afssCoordinates.size();
 //				vehicle autonomy
-			gvrp.vehicleAutonomy = Double.valueOf(br.readLine().split("/")[1]);			
+			gvrp.vehicleAutonomy = Double.valueOf(br.readLine().split("/")[1]);					
 //				vehicle consumption rate
 			gvrp.vehicleConsumptionRate = Double.valueOf(br.readLine().split("/")[1]);
-//			 	vehicle operation time limit
+//		 		vehicle operation time limit
 			gvrp.vehicleOperationTime = Double.valueOf(br.readLine().split("/")[1]);
 			Double averageVelocity = Double.valueOf(br.readLine().split("/")[1]);
+//				remove invalid customers
+			double radiusOfEarth = 4182.44949;
+			for (int i = 0; i < gvrp.customersSize; i++) {				
+				Double[] nodeJ = customersCoordinates.get(i);
+				Double lon2 = nodeJ[0], 
+						lat2 = nodeJ[1];						 
+				// miles, 6371km; 
+				double dLat = Math.toRadians(lat2-depotCoordinates[0]); 
+				double dLon = Math.toRadians(lon2-depotCoordinates[1]); 
+				double a = Math.sin(dLat/2) * Math.sin(dLat/2) + 
+						Math.cos(Math.toRadians(depotCoordinates[1])) * Math.cos(Math.toRadians(lat2)) * 
+						Math.sin(dLon/2) * Math.sin(dLon/2); 
+				double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 						
+				if (radiusOfEarth * c * gvrp.vehicleConsumptionRate > (3/2) * gvrp.vehicleAutonomy) {
+					customersCoordinates.remove(i);
+					i--;
+					gvrp.customersSize--;
+				}
+			}			
 //			calculate distances and times			
 			List<Double[]> allNodes = new ArrayList<Double[]> (gvrp.customersSize + gvrp.rechargeStationsSize + 1);
 			allNodes.add(depotCoordinates);
 			allNodes.addAll(customersCoordinates);
 			allNodes.addAll(afssCoordinates);
 			gvrp.distanceMatrix = new Double[allNodes.size()][allNodes.size()];
-			gvrp.timeMatrix = new Double[allNodes.size()][allNodes.size()];
-			double radiusOfEarth = 4182.44949;
+			gvrp.timeMatrix = new Double[allNodes.size()][allNodes.size()];			
+			gvrp.nodesCoordinates = new HashMap<Integer, Integer[]> ();
 			for (int i = 0; i < allNodes.size(); i++) {
+				gvrp.nodesCoordinates.put(i, new Integer[] {0, 0});
 				gvrp.distanceMatrix[i][i] = 0d;
 				gvrp.timeMatrix[i][i] = 0d;
 				Double[] nodeI = allNodes.get(i);
@@ -83,7 +103,7 @@ public class EMHInstanceReader {
 			gvrp.customersServiceTime = new HashMap<Integer, Double> (gvrp.customersSize);
 			for (int i = 1; i <= gvrp.customersSize; gvrp.customersDemands.put(i, 0d), gvrp.customersServiceTime.put(i, 0.25d), i++);			
 			gvrp.rechargeStationsRefuelingTime = new HashMap<Integer, Double> ();
-			for (int i = 1; i <= gvrp.rechargeStationsSize; gvrp.rechargeStationsRefuelingTime.put(gvrp.customersSize + i, 0.5d), i++);
+			for (int i = 1; i <= gvrp.rechargeStationsSize; gvrp.rechargeStationsRefuelingTime.put(gvrp.customersSize + i, 0.5d), i++);			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

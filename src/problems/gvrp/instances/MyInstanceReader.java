@@ -13,8 +13,8 @@ import java.util.regex.Pattern;
 
 import problems.gvrp.GVRP;
 
-public class MyInstanceReader {
-	public static void read(String path, GVRP gvrp) {
+public class MyInstanceReader implements GVRPInstanceReader{
+	public void read(String path, GVRP gvrp) {
 		List<NodeData> customersCoordinates,
 				afssCoordinates;
 		NodeData depotCoordinates; 

@@ -17,6 +17,7 @@ public class FSDrop extends LocalSearch<GVRP_Inverse, Routes>{
 					Route routeCopy = (Route) route.clone();
 					routeCopy.remove(k);
 					if (eval.getFuelConsumption(routeCopy) <= eval.vehicleAutonomy
+						&& eval.getTimeConsumption(routeCopy) <= eval.vehicleOperationTime
 						&& eval.getDistance(routeCopy) < eval.getDistance(route)) {
 						routes.set(i, routeCopy);						
 						i = -1;
@@ -39,7 +40,8 @@ public class FSDrop extends LocalSearch<GVRP_Inverse, Routes>{
 			if (eval.rechargeStationsRefuelingTime.get(route.get(k)) != null) {
 				Route routeCopy = (Route) route.clone();
 				routeCopy.remove(k);
-				if (eval.getFuelConsumption(routeCopy) <= eval.vehicleAutonomy) {
+				if (eval.getFuelConsumption(routeCopy) <= eval.vehicleAutonomy
+					&& eval.getTimeConsumption(routeCopy) <= eval.vehicleOperationTime) {
 					routes.set(routeIndex, routeCopy);		
 					break;
 				}

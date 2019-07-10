@@ -9,7 +9,7 @@ import problems.gvrp.Route;
 import problems.gvrp.Routes;
 
 public class WithinTourTwoVertexInterchange extends LocalSearch<GVRP_Inverse, Routes>{
-
+		
 	@Override
 	public Routes localOptimalSolution(GVRP_Inverse eval, Routes solution) {
 		Routes routes = (Routes) solution.clone();
@@ -20,34 +20,6 @@ public class WithinTourTwoVertexInterchange extends LocalSearch<GVRP_Inverse, Ro
 					if (k != l){
 						Route routeCopy = (Route) route.clone();
 //						first
-						Integer possibleAFS = routeCopy.get(k);
-						if (eval.rechargeStationsRefuelingTime.get(possibleAFS) != null){
-							routeCopy.remove(k);
-							if (eval.getFuelConsumption(routeCopy) <= eval.vehicleAutonomy
-								&& eval.getDistance(routeCopy) < eval.getDistance(route)) {
-								routes.set(i, routeCopy);
-								route = routeCopy;
-								k = 0;
-								break;
-							} else {
-								routeCopy.add(k, possibleAFS);
-							}
-						}
-//						second
-						possibleAFS = routeCopy.get(l);
-						if (eval.rechargeStationsRefuelingTime.get(possibleAFS) != null){
-							routeCopy.remove(l);
-							if (eval.getFuelConsumption(routeCopy) <= eval.vehicleAutonomy
-								&& eval.getDistance(routeCopy) < eval.getDistance(route)) {
-								routes.set(i, routeCopy);
-								route = routeCopy;
-								k = 0;
-								break;
-							} else {
-								routeCopy.add(l, possibleAFS);
-							}
-						}
-//						third
 						routeCopy.set(k, routeCopy.set(l, routeCopy.get(k)));						
 						if (eval.getFuelConsumption(routeCopy) <= eval.vehicleAutonomy 
 							&& eval.getTimeConsumption(routeCopy) <= eval.vehicleOperationTime
@@ -56,14 +28,60 @@ public class WithinTourTwoVertexInterchange extends LocalSearch<GVRP_Inverse, Ro
 							route = routeCopy;
 							k = 0;
 							break;
-						}						
+						}		
+//						first
+						Integer possibleAFS = routeCopy.get(k);
+						if (eval.rechargeStationsRefuelingTime.get(possibleAFS) != null){							
+							routeCopy.remove(k);
+							if (eval.getFuelConsumption(routeCopy) <= eval.vehicleAutonomy
+								&& eval.getDistance(routeCopy) < eval.getDistance(route)) {
+								routes.set(i, routeCopy);
+								route = routeCopy;
+								k = 0;
+								break;
+							}							
+							for (Integer afs : eval.rechargeStationsRefuelingTime.keySet()) {
+								routeCopy.add(k, afs);
+								if (eval.getFuelConsumption(routeCopy) <= eval.vehicleAutonomy
+									&& eval.getTimeConsumption(routeCopy) <= eval.vehicleOperationTime
+									&& eval.getDistance(routeCopy) < eval.getDistance(route)) {
+									routes.set(i, routeCopy);
+									route = routeCopy;
+									routeCopy = (Route) route.clone();
+								}								
+								routeCopy.remove(k);								
+							}
+						}
+//						second
+						possibleAFS = routeCopy.get(l);
+						if (eval.rechargeStationsRefuelingTime.get(possibleAFS) != null){							
+							routeCopy.remove(l);
+							if (eval.getFuelConsumption(routeCopy) <= eval.vehicleAutonomy
+								&& eval.getDistance(routeCopy) < eval.getDistance(route)) {
+								routes.set(i, routeCopy);
+								route = routeCopy;
+								k = 0;
+								break;
+							}							
+							for (Integer afs : eval.rechargeStationsRefuelingTime.keySet()) {
+								routeCopy.add(l, afs);
+								if (eval.getFuelConsumption(routeCopy) <= eval.vehicleAutonomy
+									&& eval.getTimeConsumption(routeCopy) <= eval.vehicleOperationTime
+									&& eval.getDistance(routeCopy) < eval.getDistance(route)) {
+									routes.set(i, routeCopy);
+									route = routeCopy;
+									routeCopy = (Route) route.clone();
+								}
+								routeCopy.remove(l);	
+							}
+						}
 					}
 				}							
 			}
 		}		
 		return routes;
 	}
-
+	
 	@Override
 	public Routes randomSolution(GVRP_Inverse eval, Routes solution) {
 		List<Integer> routesBiggerThanThree = new ArrayList<Integer>(); 

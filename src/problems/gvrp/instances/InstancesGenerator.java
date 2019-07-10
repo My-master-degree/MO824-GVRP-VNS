@@ -31,7 +31,7 @@ public class InstancesGenerator {
 		Integer opt = null;
 		Double speed = 40d;
 		Integer lastCustomerId = null;
-		Integer optPartition = 2;
+		Integer optPartition = 15;
 		try {
 			br = new BufferedReader(new FileReader(file));			
 //			discard first line

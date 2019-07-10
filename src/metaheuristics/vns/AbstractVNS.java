@@ -7,6 +7,9 @@ import java.util.List;
 import java.util.Random;
 
 import problems.Evaluator;
+import problems.gvrp.GVRP;
+import problems.gvrp.Routes;
+import problems.gvrp.analyzer.Analyzer;
 import solutions.Solution;
 
 /**
@@ -20,12 +23,12 @@ import solutions.Solution;
 public abstract class AbstractVNS<E extends Evaluator<T, S>, S extends Solution<T>, T> {
 	
 	public enum VNS_TYPE{
-		INTENSIFICATION(1),
-		NONE(4);
-		VNS_TYPE(int type){
+		INTENSIFICATION("INTENSIFICATION"),
+		NONE("NONE");
+		VNS_TYPE(String type){
 			this.type = type;
 		}
-		int type;
+		public String type;
 	}
 	
 	protected int a;
@@ -36,7 +39,7 @@ public abstract class AbstractVNS<E extends Evaluator<T, S>, S extends Solution<
 	 * flag that indicates whether the code should print more information on
 	 * screen
 	 */
-	public static boolean verbose = true;
+	public static boolean verbose = false;
 
 	/**
 	 * a random number generator
@@ -73,17 +76,6 @@ public abstract class AbstractVNS<E extends Evaluator<T, S>, S extends Solution<
 	 */
 	protected Integer maxDurationInMilliseconds;
 
-	/**
-	 * Constructor for the AbstractGRASP class.
-	 * 
-	 * @param objFunction
-	 *            The objective function being maximized.
-	 * @param alpha
-	 *            The GRASP greediness-randomness parameter (within the range
-	 *            [0,1])
-	 * @param iterations
-	 *            The number of iterations which the GRASP will be executed.
-	 */
 	public AbstractVNS(E objFunction, Integer iterations, Integer maxDurationInMilliseconds, 
 			List<LocalSearch<E, S>> localSearchs, VNS_TYPE vns_type) {
 		this.ObjFunction = objFunction;
@@ -101,13 +93,6 @@ public abstract class AbstractVNS<E extends Evaluator<T, S>, S extends Solution<
 		return i + 1;
 	}
 	
-	/**
-	 * The GRASP mainframe. It consists of a loop, in which each iteration goes
-	 * through the constructive heuristic and local search. The best solution is
-	 * returned as result.
-	 * 
-	 * @return The best feasible solution obtained throughout all iterations.
-	 */
 	public S solve() {
 //		build initial solution
 		bestSol = constructiveHeuristic();
@@ -121,15 +106,22 @@ public abstract class AbstractVNS<E extends Evaluator<T, S>, S extends Solution<
 			j < this.maxNumberOfIterations &&
 			System.currentTimeMillis() <= endTime
 			; c++, j++) {
-//			random solution
-//			System.out.println("get random at "+i);
+//			random solution			
 			S randomSolution = this.neighborhoodStructures.get(i).randomSolution(this.ObjFunction, localOptimalSolution);
 			this.ObjFunction.evaluate(randomSolution);
-//			System.out.println("random generated");
+			String str = Analyzer.analyze((Routes) randomSolution, (GVRP) ObjFunction);
+			if (!str.equals("")) {
+				System.out.println("get random at "+i);
+				System.out.println(str);
+			}
 //			local opt solution
-//			System.out.println("get local opt");
 			localOptimalSolution = this.neighborhoodStructures.get(i).localOptimalSolution(this.ObjFunction, randomSolution);
 			this.ObjFunction.evaluate(localOptimalSolution);
+			str = Analyzer.analyze((Routes) localOptimalSolution, (GVRP) ObjFunction);
+			if (!str.equals("")) {
+				System.out.println("get local at "+i);
+				System.out.println(str);
+			}
 //			System.out.println("local opt achieved");
 //			check cost
 			if (localOptimalSolution.cost > bestSol.cost) {				
